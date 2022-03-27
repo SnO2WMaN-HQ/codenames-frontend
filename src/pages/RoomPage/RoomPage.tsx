@@ -14,9 +14,13 @@ export const RoomPage: React.VFC = () => {
 
   const [playerId, setPlayerId] = useState<string>();
 
-  const [rawPlayersList, setRawPlayersList] = useState<{ id: string; name: string; }[]>();
-  const playersList = useMemo<{ id: string; name: string; self: boolean; }[] | undefined>(
-    () => rawPlayersList?.map(({ id, ...rest }) => ({ id, ...rest, self: id === playerId })),
+  const [rawPlayersList, setRawPlayersList] = useState<
+    { id: string; name: string; isHost: boolean; }[]
+  >();
+  const playersList = useMemo<
+    { id: string; name: string; isHost: boolean; isSelf: boolean; }[] | undefined
+  >(
+    () => rawPlayersList?.map(({ id, ...rest }) => ({ ...rest, id, isSelf: id === playerId })),
     [playerId, rawPlayersList],
   );
 
@@ -68,7 +72,11 @@ export const RoomPage: React.VFC = () => {
           const { payload } = data;
           const { players } = payload;
 
-          setRawPlayersList(players);
+          setRawPlayersList(
+            players.map(
+              ({ is_host: isHost, ...rest }: { id: string; name: string; is_host: boolean; }) => ({ isHost, ...rest }),
+            ),
+          );
 
           break;
         }
@@ -105,7 +113,7 @@ export const RoomPage: React.VFC = () => {
 
 export const PlayersList: React.VFC<{
   className?: string;
-  players: { id: string; name: string; self: boolean; }[] | undefined;
+  players: { id: string; name: string; isSelf: boolean; isHost: boolean; }[] | undefined;
   onRename(name: string): void;
 }> = (
   { className, players, onRename },
@@ -122,10 +130,10 @@ export const PlayersList: React.VFC<{
       {!players && <span>Loading</span>}
       {players && (
         <div>
-          {players.map(({ id, name, self }) => (
+          {players.map(({ id, name, isSelf, isHost }) => (
             <div key={id}>
-              {!self && <span>{name}</span>}
-              {self && (
+              {!isSelf && <span>{name}</span>}
+              {isSelf && (
                 <>
                   <input
                     value={value !== undefined ? value : name}
@@ -141,6 +149,7 @@ export const PlayersList: React.VFC<{
                   </button>
                 </>
               )}
+              {isHost && <span>Host</span>}
             </div>
           ))}
         </div>
