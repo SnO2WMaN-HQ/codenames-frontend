@@ -163,16 +163,20 @@ export const RoomPage: React.VFC = () => {
         <Game
           playerList={playersList}
           game={game}
-          handleSuggest={(key) => {
+          handleAddSuggest={(key) => {
             if (!wsRef.current || !playerId) return;
 
             wsRef.current.send(JSON.stringify({
               method: "UPDATE_GAME",
-              payload: {
-                type: "suggest",
-                player_id: playerId,
-                key,
-              },
+              payload: { type: "add_suggest", player_id: playerId, key },
+            }));
+          }}
+          handleRemoveSuggest={(key) => {
+            if (!wsRef.current || !playerId) return;
+
+            wsRef.current.send(JSON.stringify({
+              method: "UPDATE_GAME",
+              payload: { type: "remove_suggest", player_id: playerId, key },
             }));
           }}
           handleSelect={(key) => {
@@ -193,15 +197,76 @@ export const RoomPage: React.VFC = () => {
   );
 };
 
+export const Card: React.VFC<{
+  className?: string;
+  word: string;
+  suggestors: { id: string; name: string; }[];
+  handleAddSuggest(): void;
+  handleRemoveSuggest(): void;
+  handleSelect(): void;
+}> = ({ className, word, handleAddSuggest, handleRemoveSuggest, suggestors, handleSelect }) => {
+  const [suggesting, setSuggesting] = useState<boolean>(false);
+
+  return (
+    <div
+      className={clsx(
+        className,
+        ["relative"],
+        ["bg-white"],
+        ["shadow-md"],
+        ["select-none"],
+        [["w-36"], ["h-24"]],
+        [["px-2"], ["py-2"]],
+        ["flex", ["flex-col"]],
+      )}
+      onClick={(e) => {
+        e.preventDefault();
+
+        setSuggesting((v) => !v);
+
+        if (suggesting) handleRemoveSuggest();
+        else handleAddSuggest();
+      }}
+    >
+      <span className={clsx(["text-center"])}>{word}</span>
+      <div className={clsx(["flex", ["flex-col"]])}>
+        {suggestors.map(({ id, name }) => (
+          <div key={id}>
+            <span className={clsx(["text-sm"])}>{name}</span>
+          </div>
+        ))}
+      </div>
+      <button
+        className={clsx(
+          ["absolute"],
+          [["-top-4"], ["-right-4"]],
+          [["w-8"], ["h-8"]],
+          ["rounded-full"],
+          ["bg-blue-300"],
+          ["text-sm"],
+          ["text-white"],
+        )}
+        onClick={(e) => {
+          e.preventDefault();
+          handleSelect();
+        }}
+      >
+        GO!
+      </button>
+    </div>
+  );
+};
+
 export const Game: React.VFC<{
-  handleSuggest(key: number): void;
+  handleAddSuggest(key: number): void;
+  handleRemoveSuggest(key: number): void;
   handleSelect(key: number): void;
   game: {
     dimension: [number, number];
     deck: { key: number; word: string; suggestedBy: string[]; }[];
   };
   playerList: { id: string; name: string; }[];
-}> = ({ game, playerList, handleSuggest, handleSelect }) => {
+}> = ({ game, playerList, handleAddSuggest: handleSuggest, handleRemoveSuggest, handleSelect }) => {
   return (
     <div className={clsx(["flex"], ["justify-center"])}>
       <div
@@ -212,49 +277,22 @@ export const Game: React.VFC<{
         }}
       >
         {game.deck.map(({ word, key, suggestedBy }) => (
-          <div
+          <Card
             key={key}
-            className={clsx(
-              ["relative"],
-              ["bg-white"],
-              ["shadow-md"],
-              [["w-36"], ["h-24"]],
-              [["px-2"], ["py-2"]],
-              ["flex", ["flex-col"]],
-            )}
-            onClick={(e) => {
-              e.preventDefault(), handleSuggest(key);
+            word={word}
+            suggestors={suggestedBy
+              .map((sg) => playerList.find(({ id }) => id === sg))
+              .filter((v): v is { id: string; name: string; } => Boolean(v))}
+            handleAddSuggest={() => {
+              handleSuggest(key);
             }}
-          >
-            <span className={clsx(["text-center"])}>{word}</span>
-            <div className={clsx(["flex", ["flex-col"]])}>
-              {suggestedBy
-                .map((sg) => playerList.find(({ id }) => id === sg))
-                .filter((v): v is { id: string; name: string; } => Boolean(v))
-                .map(({ id, name }) => (
-                  <div key={id}>
-                    <span className={clsx(["text-sm"])}>{name}</span>
-                  </div>
-                ))}
-            </div>
-            <button
-              className={clsx(
-                ["absolute"],
-                [["-top-4"], ["-right-4"]],
-                [["w-8"], ["h-8"]],
-                ["rounded-full"],
-                ["bg-blue-300"],
-                ["text-sm"],
-                ["text-white"],
-              )}
-              onClick={(e) => {
-                e.preventDefault();
-                handleSelect(key);
-              }}
-            >
-              GO!
-            </button>
-          </div>
+            handleRemoveSuggest={() => {
+              handleRemoveSuggest(key);
+            }}
+            handleSelect={() => {
+              handleSelect(key);
+            }}
+          />
         ))}
       </div>
     </div>
