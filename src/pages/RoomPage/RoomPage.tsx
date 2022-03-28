@@ -23,6 +23,17 @@ export const RoomPage: React.VFC = () => {
     () => rawPlayersList?.map(({ id, ...rest }) => ({ ...rest, id, isSelf: id === playerId })),
     [playerId, rawPlayersList],
   );
+  const isHostIsMe = useMemo<boolean>(
+    () => playersList?.find(({ isSelf }) => isSelf)?.isHost === true,
+    [playersList],
+  );
+  const isStartable = useMemo<boolean>(
+    () =>
+      isHostIsMe
+      && (playersList && 4 <= playersList.length) === true,
+    [isHostIsMe, playersList],
+  );
+  const [isPlaying, setIsPlaying] = useState<boolean | undefined>();
 
   const sendRename = (newName: string): void => {
     if (!wsRef.current || !playerId) return;
@@ -30,6 +41,25 @@ export const RoomPage: React.VFC = () => {
     wsRef.current.send(JSON.stringify({
       method: "RENAME",
       payload: { player_id: playerId, new_name: newName },
+    }));
+  };
+  const sendStartGame = (
+    rules: {
+      wordsCount: number;
+      wordsAssign: number[];
+      deadWords: number;
+    },
+  ) => {
+    if (!wsRef.current || !playerId) return;
+
+    wsRef.current.send(JSON.stringify({
+      method: "START_GAME",
+      payload: {
+        player_id: playerId,
+        words_count: rules.wordsCount,
+        words_assign: rules.wordsAssign,
+        dead_words: rules.deadWords,
+      },
     }));
   };
 
@@ -43,7 +73,7 @@ export const RoomPage: React.VFC = () => {
     });
 
     ws.addEventListener("open", () => {
-      const storedPlayerId = window.localStorage.getItem("player_id");
+      const storedPlayerId = window.sessionStorage.getItem("player_id"); // TODO: 4人以上のテストのためにsessionStorageを使う(localStorageに直す)
 
       ws.send(JSON.stringify({
         method: "JOIN",
@@ -64,19 +94,20 @@ export const RoomPage: React.VFC = () => {
           const { player_id: playerId } = payload;
 
           setPlayerId(playerId);
-          window.localStorage.setItem("player_id", playerId);
+          window.sessionStorage.setItem("player_id", playerId); // TODO: 4人以上のテストのためにsessionStorageを使う
 
           break;
         }
         case "UPDATE_ROOM": {
           const { payload } = data;
-          const { players } = payload;
+          const { players, is_playing } = payload;
 
           setRawPlayersList(
             players.map(
               ({ is_host: isHost, ...rest }: { id: string; name: string; is_host: boolean; }) => ({ isHost, ...rest }),
             ),
           );
+          setIsPlaying(is_playing);
 
           break;
         }
@@ -107,6 +138,8 @@ export const RoomPage: React.VFC = () => {
         players={playersList}
         onRename={sendRename}
       />
+      {!isPlaying && <GameStarter startGame={sendStartGame} startable={isStartable} />}
+      {isPlaying && <p>Is Playing</p>}
     </div>
   );
 };
@@ -154,6 +187,35 @@ export const PlayersList: React.VFC<{
           ))}
         </div>
       )}
+    </div>
+  );
+};
+
+export const GameStarter: React.VFC<{
+  startable: boolean;
+  startGame(
+    rules: {
+      wordsCount: number;
+      wordsAssign: number[];
+      deadWords: number;
+    },
+  ): void;
+}> = ({ startGame, startable }) => {
+  const handleRename = () => {
+    startGame(
+      {
+        wordsCount: 25,
+        wordsAssign: [9, 8],
+        deadWords: 1,
+      },
+    );
+  };
+
+  return (
+    <div>
+      <button disabled={!startable} onClick={handleRename}>
+        start
+      </button>
     </div>
   );
 };
