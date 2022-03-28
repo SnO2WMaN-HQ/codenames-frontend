@@ -38,6 +38,13 @@ export const RoomPage: React.VFC = () => {
   );
   const [isPlaying, setIsPlaying] = useState<boolean | undefined>();
 
+  const [game, setGame] = useState<
+    undefined | {
+      dimension: [number, number];
+      deck: { key: number; word: string; suggestedBy: string[]; }[];
+    }
+  >(undefined);
+
   const sendRename = (newName: string): void => {
     if (!wsRef.current || !playerId) return;
 
@@ -114,6 +121,16 @@ export const RoomPage: React.VFC = () => {
 
           break;
         }
+        case "SYNC_GAME": {
+          const { payload } = data;
+          const { deck } = payload;
+          setGame({
+            dimension: [5, 5],
+            deck: deck.map((
+              { word, key, suggested_by: suggestedBy }: { word: string; key: number; suggested_by: string[]; },
+            ) => ({ word, key, suggestedBy })),
+          });
+        }
       }
     });
 
@@ -142,7 +159,104 @@ export const RoomPage: React.VFC = () => {
         onRename={sendRename}
       />
       {!isPlaying && <GameStarter startGame={sendStartGame} startable={isStartable} />}
-      {isPlaying && <p>Is Playing</p>}
+      {playersList && isPlaying && game && (
+        <Game
+          playerList={playersList}
+          game={game}
+          handleSuggest={(key) => {
+            if (!wsRef.current || !playerId) return;
+
+            wsRef.current.send(JSON.stringify({
+              method: "UPDATE_GAME",
+              payload: {
+                type: "suggest",
+                player_id: playerId,
+                key,
+              },
+            }));
+          }}
+          handleSelect={(key) => {
+            if (!wsRef.current || !playerId) return;
+
+            wsRef.current.send(JSON.stringify({
+              method: "UPDATE_GAME",
+              payload: {
+                type: "select",
+                player_id: playerId,
+                key,
+              },
+            }));
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+export const Game: React.VFC<{
+  handleSuggest(key: number): void;
+  handleSelect(key: number): void;
+  game: {
+    dimension: [number, number];
+    deck: { key: number; word: string; suggestedBy: string[]; }[];
+  };
+  playerList: { id: string; name: string; }[];
+}> = ({ game, playerList, handleSuggest, handleSelect }) => {
+  return (
+    <div className={clsx(["flex"], ["justify-center"])}>
+      <div
+        className={clsx(["grid", ["gap-6"]])}
+        style={{
+          gridTemplateColumns: `repeat(${game.dimension[0]}, minmax(0, 1fr))`,
+          gridTemplateRows: `repeat(${game.dimension[1]}, minmax(0, 1fr))`,
+        }}
+      >
+        {game.deck.map(({ word, key, suggestedBy }) => (
+          <div
+            key={key}
+            className={clsx(
+              ["relative"],
+              ["bg-white"],
+              ["shadow-md"],
+              [["w-36"], ["h-24"]],
+              [["px-2"], ["py-2"]],
+              ["flex", ["flex-col"]],
+            )}
+            onClick={(e) => {
+              e.preventDefault(), handleSuggest(key);
+            }}
+          >
+            <span className={clsx(["text-center"])}>{word}</span>
+            <div className={clsx(["flex", ["flex-col"]])}>
+              {suggestedBy
+                .map((sg) => playerList.find(({ id }) => id === sg))
+                .filter((v): v is { id: string; name: string; } => Boolean(v))
+                .map(({ id, name }) => (
+                  <div key={id}>
+                    <span className={clsx(["text-sm"])}>{name}</span>
+                  </div>
+                ))}
+            </div>
+            <button
+              className={clsx(
+                ["absolute"],
+                [["-top-4"], ["-right-4"]],
+                [["w-8"], ["h-8"]],
+                ["rounded-full"],
+                ["bg-blue-300"],
+                ["text-sm"],
+                ["text-white"],
+              )}
+              onClick={(e) => {
+                e.preventDefault();
+                handleSelect(key);
+              }}
+            >
+              GO!
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
