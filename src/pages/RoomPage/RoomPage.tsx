@@ -42,6 +42,7 @@ export const RoomPage: React.VFC = () => {
     undefined | {
       dimension: [number, number];
       deck: { key: number; word: string; suggestedBy: string[]; }[];
+      players: { playerId: string; team: number; isSpymaster: boolean; }[];
     }
   >(undefined);
 
@@ -123,12 +124,24 @@ export const RoomPage: React.VFC = () => {
         }
         case "SYNC_GAME": {
           const { payload } = data;
-          const { deck } = payload;
+          const { deck, players } = payload;
+          console.dir(payload);
           setGame({
             dimension: [5, 5],
             deck: deck.map((
-              { word, key, suggested_by: suggestedBy }: { word: string; key: number; suggested_by: string[]; },
+              { word, key, suggested_by: suggestedBy }: {
+                word: string;
+                key: number;
+                suggested_by: string[];
+              },
             ) => ({ word, key, suggestedBy })),
+            players: players.map((
+              { player_id: playerId, team, is_spymaseter: isSpymaster }: {
+                player_id: string;
+                team: number;
+                is_spymaseter: boolean;
+              },
+            ) => ({ playerId, team, isSpymaster })),
           });
         }
       }
@@ -189,6 +202,20 @@ export const RoomPage: React.VFC = () => {
                 player_id: playerId,
                 key,
               },
+            }));
+          }}
+          handleJoinOperative={(team) => {
+            if (!wsRef.current || !playerId) return;
+            wsRef.current.send(JSON.stringify({
+              method: "UPDATE_GAME",
+              payload: { type: "join_operative", player_id: playerId, team },
+            }));
+          }}
+          handleJoinSpymaster={(team) => {
+            if (!wsRef.current || !playerId) return;
+            wsRef.current.send(JSON.stringify({
+              method: "UPDATE_GAME",
+              payload: { type: "join_spymaster", player_id: playerId, team },
             }));
           }}
         />
@@ -261,14 +288,47 @@ export const Game: React.VFC<{
   handleAddSuggest(key: number): void;
   handleRemoveSuggest(key: number): void;
   handleSelect(key: number): void;
+  handleJoinOperative(team: number): void;
+  handleJoinSpymaster(team: number): void;
   game: {
     dimension: [number, number];
     deck: { key: number; word: string; suggestedBy: string[]; }[];
+    players: { playerId: string; team: number; isSpymaster: boolean; }[];
   };
   playerList: { id: string; name: string; }[];
-}> = ({ game, playerList, handleAddSuggest: handleSuggest, handleRemoveSuggest, handleSelect }) => {
+}> = (
+  {
+    game,
+    playerList,
+    handleAddSuggest: handleSuggest,
+    handleRemoveSuggest,
+    handleSelect,
+    handleJoinOperative,
+    handleJoinSpymaster,
+  },
+) => {
   return (
     <div className={clsx(["flex"], ["justify-center"])}>
+      <div>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            handleJoinOperative(1);
+          }}
+        >
+          as operative
+        </button>
+      </div>
+      <div>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            handleJoinSpymaster(1);
+          }}
+        >
+          as spymaster
+        </button>
+      </div>
       <div
         className={clsx(["grid", ["gap-6"]])}
         style={{
