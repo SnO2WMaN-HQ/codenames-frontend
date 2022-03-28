@@ -2,6 +2,9 @@ import clsx from "clsx";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
+import { GameStarter } from "./GameStarter";
+import { PlayersList } from "./PlayersList";
+
 export const RoomPage: React.VFC = () => {
   const { id } = useParams<"id">();
   const wsEndpoint = useMemo<string | undefined>(
@@ -140,82 +143,6 @@ export const RoomPage: React.VFC = () => {
       />
       {!isPlaying && <GameStarter startGame={sendStartGame} startable={isStartable} />}
       {isPlaying && <p>Is Playing</p>}
-    </div>
-  );
-};
-
-export const PlayersList: React.VFC<{
-  className?: string;
-  players: { id: string; name: string; isSelf: boolean; isHost: boolean; }[] | undefined;
-  onRename(name: string): void;
-}> = (
-  { className, players, onRename },
-) => {
-  const [value, setValue] = useState<string | undefined>();
-
-  const handleRename = () => {
-    if (!value || value === "") return;
-    onRename(value);
-  };
-
-  return (
-    <div className={clsx(className)}>
-      {!players && <span>Loading</span>}
-      {players && (
-        <div>
-          {players.map(({ id, name, isSelf, isHost }) => (
-            <div key={id}>
-              {!isSelf && <span>{name}</span>}
-              {isSelf && (
-                <>
-                  <input
-                    value={value !== undefined ? value : name}
-                    placeholder={name}
-                    onChange={(e) => {
-                      e.preventDefault();
-                      setValue(e.target.value);
-                    }}
-                  >
-                  </input>
-                  <button onClick={handleRename}>
-                    rename
-                  </button>
-                </>
-              )}
-              {isHost && <span>Host</span>}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export const GameStarter: React.VFC<{
-  startable: boolean;
-  startGame(
-    rules: {
-      wordsCount: number;
-      wordsAssign: number[];
-      deadWords: number;
-    },
-  ): void;
-}> = ({ startGame, startable }) => {
-  const handleRename = () => {
-    startGame(
-      {
-        wordsCount: 25,
-        wordsAssign: [9, 8],
-        deadWords: 1,
-      },
-    );
-  };
-
-  return (
-    <div>
-      <button disabled={!startable} onClick={handleRename}>
-        start
-      </button>
     </div>
   );
 };
