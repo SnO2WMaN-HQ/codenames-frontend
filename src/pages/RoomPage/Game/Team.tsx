@@ -24,23 +24,58 @@ export const Team: React.VFC<
     <div
       className={clsx(
         className,
-        ["px-4"],
+        ["px-8"],
         ["py-4"],
         [
-          { "bg-cyan-200": team === 1 },
-          { "bg-orange-200": team === 2 },
+          {
+            "bg-cyan-50": team === 1,
+            "bg-orange-50": team === 2,
+          },
+        ],
+        [
+          "border",
+          [
+            { "border-cyan-400": team === 1 },
+            { "border-orange-400": team === 2 },
+          ],
         ],
         ["flex", ["flex-col"]],
       )}
     >
       <div
         className={clsx(
-          className,
           ["flex", ["flex-col"]],
         )}
       >
-        <span>Operative</span>
+        <span
+          className={clsx(
+            className,
+            ["text-lg"],
+            ["font-bold"],
+            [
+              {
+                "text-cyan-400": team === 1,
+                "text-orange-400": team === 2,
+              },
+            ],
+          )}
+        >
+          Operative
+        </span>
+        <div
+          className={clsx(["flex"])}
+        >
+          {operatives.map(({ playerId }) => (
+            <span
+              key={playerId}
+              className={clsx(["mr-2"])}
+            >
+              {players.find(({ id }) => id === playerId)?.name}
+            </span>
+          ))}
+        </div>
         <button
+          className={clsx(["mt-2"])}
           onClick={(e) => {
             e.preventDefault();
             handleJoinOperative(team);
@@ -48,22 +83,40 @@ export const Team: React.VFC<
         >
           join as operative
         </button>
-        <div>
-          {operatives.map(({ playerId }) => (
-            <div key={playerId}>
+      </div>
+      <div
+        className={clsx(
+          ["mt-2"],
+          ["flex", ["flex-col"]],
+        )}
+      >
+        <span
+          className={clsx(
+            className,
+            ["text-lg"],
+            ["font-bold"],
+            [
+              {
+                "text-cyan-400": team === 1,
+                "text-orange-400": team === 2,
+              },
+            ],
+          )}
+        >
+          Spymaster
+        </span>
+        <div className={clsx(["flex"])}>
+          {spymasters.map(({ playerId }) => (
+            <div
+              key={playerId}
+              className={clsx(["mr-2"])}
+            >
               <span>{players.find(({ id }) => id === playerId)?.name}</span>
             </div>
           ))}
         </div>
-      </div>
-      <div
-        className={clsx(
-          className,
-          ["flex", ["flex-col"]],
-        )}
-      >
-        <span>Spymaster</span>
         <button
+          className={clsx(["mt-2"])}
           onClick={(e) => {
             e.preventDefault();
             handleJoinSpymaster(team);
@@ -71,13 +124,6 @@ export const Team: React.VFC<
         >
           join as spymaster
         </button>
-        <div>
-          {spymasters.map(({ playerId }) => (
-            <div key={playerId}>
-              <span>{players.find(({ id }) => id === playerId)?.name}</span>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

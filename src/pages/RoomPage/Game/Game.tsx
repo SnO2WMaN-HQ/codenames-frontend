@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import React from "react";
+import React, { useMemo } from "react";
 
 import { Card } from "./Card";
 import { Team } from "./Team";
@@ -30,14 +30,25 @@ export const Game: React.VFC<{
     handleJoinSpymaster,
   },
 ) => {
+  const selectable = useMemo(
+    () => game.teams[game.turn - 1].operatives.find(({ playerId: id }) => id === playerId) !== undefined,
+    [game, playerId],
+  );
+
   return (
     <div
-      className={clsx(["flex"], ["justify-center"], [
+      className={clsx(
+        ["px-4"],
+        ["py-4"],
+        ["flex"],
+        ["justify-center"],
         [
-          { "bg-cyan-50": game.turn === 1 },
-          { "bg-orange-50": game.turn === 2 },
+          [
+            { "bg-cyan-100": game.turn === 1 },
+            { "bg-orange-100": game.turn === 2 },
+          ],
         ],
-      ])}
+      )}
     >
       <div
         className={clsx(["grid", ["gap-6"]])}
@@ -51,6 +62,7 @@ export const Game: React.VFC<{
             key={key}
             word={word}
             role={role}
+            selectable={selectable}
             suggesting={suggestedBy.includes(playerId)}
             suggestors={suggestedBy
               .map((sg) => playerList.find(({ id }) => id === sg))

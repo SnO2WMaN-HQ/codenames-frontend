@@ -203,16 +203,11 @@ export const RoomPage: React.VFC = () => {
 
             wsRef.current.send(JSON.stringify({
               method: "UPDATE_GAME",
-              payload: {
-                type: "select",
-                player_id: playerId,
-                key,
-              },
+              payload: { type: "select", player_id: playerId, key },
             }));
           }}
           handleJoinOperative={(team) => {
             if (!wsRef.current || !playerId) return;
-            console.log({ type: "join_operative", player_id: playerId, team });
             wsRef.current.send(JSON.stringify({
               method: "UPDATE_GAME",
               payload: { type: "join_operative", player_id: playerId, team },

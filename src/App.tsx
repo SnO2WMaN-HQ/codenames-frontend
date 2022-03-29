@@ -10,7 +10,7 @@ export const App: React.VFC = () => {
     <RecoilRoot>
       <SWRConfig value={{ fetcher: (url: string) => ky.get(url).then(res => res.json()) }}>
         <main className={clsx(["min-h-screen"], ["w-full"], ["bg-slate-50"])}>
-          <div className={clsx(["max-w-screen-lg"], ["mx-auto"])}>
+          <div className={clsx(["max-w-screen-xl"], ["mx-auto"])}>
             <Outlet />
           </div>
         </main>
