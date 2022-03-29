@@ -42,7 +42,7 @@ export const RoomPage: React.VFC = () => {
     undefined | {
       dimension: [number, number];
       deck: { key: number; word: string; suggestedBy: string[]; }[];
-      players: { playerId: string; team: number; isSpymaster: boolean; }[];
+      teams: { operatives: { playerId: string; }[]; spymasters: { playerId: string; }[]; }[];
     }
   >(undefined);
 
@@ -124,7 +124,7 @@ export const RoomPage: React.VFC = () => {
         }
         case "SYNC_GAME": {
           const { payload } = data;
-          const { deck, players } = payload;
+          const { deck, teams } = payload;
           console.dir(payload);
           setGame({
             dimension: [5, 5],
@@ -135,13 +135,15 @@ export const RoomPage: React.VFC = () => {
                 suggested_by: string[];
               },
             ) => ({ word, key, suggestedBy })),
-            players: players.map((
-              { player_id: playerId, team, is_spymaseter: isSpymaster }: {
-                player_id: string;
-                team: number;
-                is_spymaseter: boolean;
+            teams: teams.map((
+              { operatives, spymasters }: {
+                operatives: { player_id: string; }[];
+                spymasters: { player_id: string; }[];
               },
-            ) => ({ playerId, team, isSpymaster })),
+            ) => ({
+              operatives: operatives.map(({ player_id }) => ({ playerId: player_id })),
+              spymasters: spymasters.map(({ player_id }) => ({ playerId: player_id })),
+            })),
           });
         }
       }
@@ -206,6 +208,7 @@ export const RoomPage: React.VFC = () => {
           }}
           handleJoinOperative={(team) => {
             if (!wsRef.current || !playerId) return;
+            console.log({ type: "join_operative", player_id: playerId, team });
             wsRef.current.send(JSON.stringify({
               method: "UPDATE_GAME",
               payload: { type: "join_operative", player_id: playerId, team },
@@ -284,6 +287,67 @@ export const Card: React.VFC<{
   );
 };
 
+export const Team: React.VFC<
+  {
+    className?: string;
+    team: number;
+    operatives: { playerId: string; }[];
+    spymasters: { playerId: string; }[];
+    players: { id: string; name: string; }[];
+    handleJoinOperative(team: number): void;
+    handleJoinSpymaster(team: number): void;
+  }
+> = ({
+  className,
+  team,
+  operatives,
+  spymasters,
+  handleJoinOperative,
+  handleJoinSpymaster,
+  players,
+}) => {
+  return (
+    <div className={clsx(className)}>
+      <div>
+        <span>Operative</span>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            handleJoinOperative(team);
+          }}
+        >
+          join as operative
+        </button>
+        <div>
+          {operatives.map(({ playerId }) => (
+            <div key={playerId}>
+              <span>{players.find(({ id }) => id === playerId)?.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <span>Spymaster</span>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            handleJoinSpymaster(team);
+          }}
+        >
+          join as spymaster
+        </button>
+        <div>
+          {spymasters.map(({ playerId }) => (
+            <div key={playerId}>
+              <span>{players.find(({ id }) => id === playerId)?.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const Game: React.VFC<{
   handleAddSuggest(key: number): void;
   handleRemoveSuggest(key: number): void;
@@ -293,7 +357,7 @@ export const Game: React.VFC<{
   game: {
     dimension: [number, number];
     deck: { key: number; word: string; suggestedBy: string[]; }[];
-    players: { playerId: string; team: number; isSpymaster: boolean; }[];
+    teams: { operatives: { playerId: string; }[]; spymasters: { playerId: string; }[]; }[];
   };
   playerList: { id: string; name: string; }[];
 }> = (
@@ -309,26 +373,21 @@ export const Game: React.VFC<{
 ) => {
   return (
     <div className={clsx(["flex"], ["justify-center"])}>
-      <div>
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            handleJoinOperative(1);
+      {game.teams.map(({ operatives, spymasters }, i) => (
+        <Team
+          key={i}
+          team={i + 1}
+          operatives={operatives}
+          spymasters={spymasters}
+          players={playerList}
+          handleJoinOperative={(t) => {
+            handleJoinOperative(t);
           }}
-        >
-          as operative
-        </button>
-      </div>
-      <div>
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            handleJoinSpymaster(1);
+          handleJoinSpymaster={(t) => {
+            handleJoinSpymaster(t);
           }}
-        >
-          as spymaster
-        </button>
-      </div>
+        />
+      ))}
       <div
         className={clsx(["grid", ["gap-6"]])}
         style={{
