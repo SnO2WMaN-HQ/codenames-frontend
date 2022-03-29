@@ -124,55 +124,27 @@ export const RoomPage: React.VFC = () => {
         }
         case "SYNC_GAME": {
           const { payload } = data;
-          switch (payload.for) {
-            case "all": {
-              const { deck, teams } = payload;
-              setGame({
-                dimension: [5, 5],
-                deck: deck.map((
-                  { word, key, suggested_by: suggestedBy }: {
-                    word: string;
-                    key: number;
-                    suggested_by: string[];
-                  },
-                ) => ({ word, key, role: null, suggestedBy })),
-                teams: teams.map((
-                  { operatives, spymasters }: {
-                    operatives: { player_id: string; }[];
-                    spymasters: { player_id: string; }[];
-                  },
-                ) => ({
-                  operatives: operatives.map(({ player_id }) => ({ playerId: player_id })),
-                  spymasters: spymasters.map(({ player_id }) => ({ playerId: player_id })),
-                })),
-              });
-              break;
-            }
-            case "spymaster": {
-              const { deck, teams } = payload;
-              setGame({
-                dimension: [5, 5],
-                deck: deck.map((
-                  { word, key, role, suggested_by: suggestedBy }: {
-                    word: string;
-                    key: number;
-                    role: number;
-                    suggested_by: string[];
-                  },
-                ) => ({ word, key, role, suggestedBy })),
-                teams: teams.map((
-                  { operatives, spymasters }: {
-                    operatives: { player_id: string; }[];
-                    spymasters: { player_id: string; }[];
-                  },
-                ) => ({
-                  operatives: operatives.map(({ player_id }) => ({ playerId: player_id })),
-                  spymasters: spymasters.map(({ player_id }) => ({ playerId: player_id })),
-                })),
-              });
-              break;
-            }
-          }
+          const { deck, teams } = payload;
+          setGame({
+            dimension: [5, 5],
+            deck: deck.map((
+              { word, key, suggested_by: suggestedBy, role }: {
+                word: string;
+                key: number;
+                suggested_by: string[];
+                role: number | null;
+              },
+            ) => ({ word, key, role, suggestedBy })),
+            teams: teams.map((
+              { operatives, spymasters }: {
+                operatives: { player_id: string; }[];
+                spymasters: { player_id: string; }[];
+              },
+            ) => ({
+              operatives: operatives.map(({ player_id }) => ({ playerId: player_id })),
+              spymasters: spymasters.map(({ player_id }) => ({ playerId: player_id })),
+            })),
+          });
         }
       }
     });
