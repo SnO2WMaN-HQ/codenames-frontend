@@ -40,6 +40,7 @@ export const RoomPage: React.VFC = () => {
 
   const [game, setGame] = useState<
     undefined | {
+      turn: number;
       dimension: [number, number];
       deck: { key: number; role: null | number; word: string; suggestedBy: string[]; }[];
       teams: { operatives: { playerId: string; }[]; spymasters: { playerId: string; }[]; }[];
@@ -124,9 +125,10 @@ export const RoomPage: React.VFC = () => {
         }
         case "SYNC_GAME": {
           const { payload } = data;
-          const { deck, teams } = payload;
+          const { deck, teams, turn } = payload;
           setGame({
             dimension: [5, 5],
+            turn,
             deck: deck.map((
               { word, key, suggested_by: suggestedBy, role }: {
                 word: string;
@@ -245,7 +247,8 @@ export const Card: React.VFC<{
         ["relative"],
         [
           { "bg-slate-600": role === -1 },
-          { "bg-slate-100": role === 0 },
+          { "bg-white": role === null },
+          { "bg-zinc-200": role === 0 },
           { "bg-cyan-200": role === 1 },
           { "bg-orange-200": role === 2 },
         ],
@@ -253,8 +256,9 @@ export const Card: React.VFC<{
           "border",
           "rounded-md",
           [
-            { "bg-slate-800": role === -1 },
-            { "border-slate-300": role === 0 },
+            { "border-slate-800": role === -1 },
+            { "border-slate-300": role === null },
+            { "border-zinc-400": role === 0 },
             { "border-cyan-400": role === 1 },
             { "border-orange-400": role === 2 },
           ],
@@ -347,8 +351,24 @@ export const Team: React.VFC<
   players,
 }) => {
   return (
-    <div className={clsx(className)}>
-      <div>
+    <div
+      className={clsx(
+        className,
+        ["px-4"],
+        ["py-4"],
+        [
+          { "bg-cyan-200": team === 1 },
+          { "bg-orange-200": team === 2 },
+        ],
+        ["flex", ["flex-col"]],
+      )}
+    >
+      <div
+        className={clsx(
+          className,
+          ["flex", ["flex-col"]],
+        )}
+      >
         <span>Operative</span>
         <button
           onClick={(e) => {
@@ -366,7 +386,12 @@ export const Team: React.VFC<
           ))}
         </div>
       </div>
-      <div>
+      <div
+        className={clsx(
+          className,
+          ["flex", ["flex-col"]],
+        )}
+      >
         <span>Spymaster</span>
         <button
           onClick={(e) => {
@@ -395,6 +420,7 @@ export const Game: React.VFC<{
   handleJoinOperative(team: number): void;
   handleJoinSpymaster(team: number): void;
   game: {
+    turn: number;
     dimension: [number, number];
     deck: { key: number; word: string; role: number | null; suggestedBy: string[]; }[];
     teams: { operatives: { playerId: string; }[]; spymasters: { playerId: string; }[]; }[];
@@ -412,22 +438,14 @@ export const Game: React.VFC<{
   },
 ) => {
   return (
-    <div className={clsx(["flex"], ["justify-center"])}>
-      {game.teams.map(({ operatives, spymasters }, i) => (
-        <Team
-          key={i + 1}
-          team={i + 1}
-          operatives={operatives}
-          spymasters={spymasters}
-          players={playerList}
-          handleJoinOperative={(t) => {
-            handleJoinOperative(t);
-          }}
-          handleJoinSpymaster={(t) => {
-            handleJoinSpymaster(t);
-          }}
-        />
-      ))}
+    <div
+      className={clsx(["flex"], ["justify-center"], [
+        [
+          { "bg-cyan-50": game.turn === 1 },
+          { "bg-orange-50": game.turn === 2 },
+        ],
+      ])}
+    >
       <div
         className={clsx(["grid", ["gap-6"]])}
         style={{
@@ -451,6 +469,30 @@ export const Game: React.VFC<{
             }}
             handleSelect={() => {
               handleSelect(key);
+            }}
+          />
+        ))}
+      </div>
+      <div
+        className={clsx(
+          ["ml-8"],
+          ["flex-grow"],
+          ["flex", ["flex-col"]],
+          ["space-y-4"],
+        )}
+      >
+        {game.teams.map(({ operatives, spymasters }, i) => (
+          <Team
+            key={i + 1}
+            team={i + 1}
+            operatives={operatives}
+            spymasters={spymasters}
+            players={playerList}
+            handleJoinOperative={(t) => {
+              handleJoinOperative(t);
+            }}
+            handleJoinSpymaster={(t) => {
+              handleJoinSpymaster(t);
             }}
           />
         ))}
