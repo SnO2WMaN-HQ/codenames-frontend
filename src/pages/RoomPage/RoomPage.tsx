@@ -176,8 +176,9 @@ export const RoomPage: React.VFC = () => {
         onRename={sendRename}
       />
       {!isPlaying && <GameStarter startGame={sendStartGame} startable={isStartable} />}
-      {playersList && isPlaying && game && (
+      {playerId && playersList && isPlaying && game && (
         <Game
+          playerId={playerId}
           playerList={playersList}
           game={game}
           handleAddSuggest={(key) => {
@@ -232,14 +233,15 @@ export const RoomPage: React.VFC = () => {
 export const Card: React.VFC<{
   className?: string;
   word: string;
+  suggesting: boolean;
   suggestors: { id: string; name: string; }[];
   handleAddSuggest(): void;
   handleRemoveSuggest(): void;
   handleSelect(): void;
   role: number | null;
-}> = ({ className, word, handleAddSuggest, handleRemoveSuggest, suggestors, handleSelect, role }) => {
-  const [suggesting, setSuggesting] = useState<boolean>(false);
-
+}> = (
+  { className, suggesting, word, handleAddSuggest, handleRemoveSuggest, suggestors, handleSelect, role },
+) => {
   return (
     <div
       className={clsx(
@@ -269,14 +271,6 @@ export const Card: React.VFC<{
         [["px-2"], ["py-2"]],
         ["flex", ["flex-col"]],
       )}
-      onClick={(e) => {
-        e.preventDefault();
-
-        setSuggesting((v) => !v);
-
-        if (suggesting) handleRemoveSuggest();
-        else handleAddSuggest();
-      }}
     >
       <span
         className={clsx(
@@ -310,10 +304,19 @@ export const Card: React.VFC<{
           </div>
         ))}
       </div>
+      <div
+        className={clsx(["absolute", ["inset-0"], ["z-0"]])}
+        onClick={(e) => {
+          e.preventDefault();
+
+          if (suggesting) handleRemoveSuggest();
+          else handleAddSuggest();
+        }}
+      >
+      </div>
       <button
         className={clsx(
-          ["absolute"],
-          [["-top-4"], ["-right-4"]],
+          ["absolute", ["-top-4"], ["-right-4"], ["z-0"]],
           [["w-8"], ["h-8"]],
           ["rounded-full"],
           ["bg-blue-300"],
@@ -425,10 +428,12 @@ export const Game: React.VFC<{
     deck: { key: number; word: string; role: number | null; suggestedBy: string[]; }[];
     teams: { operatives: { playerId: string; }[]; spymasters: { playerId: string; }[]; }[];
   };
+  playerId: string;
   playerList: { id: string; name: string; }[];
 }> = (
   {
     game,
+    playerId,
     playerList,
     handleAddSuggest: handleSuggest,
     handleRemoveSuggest,
@@ -458,6 +463,7 @@ export const Game: React.VFC<{
             key={key}
             word={word}
             role={role}
+            suggesting={suggestedBy.includes(playerId)}
             suggestors={suggestedBy
               .map((sg) => playerList.find(({ id }) => id === sg))
               .filter((v): v is { id: string; name: string; } => Boolean(v))}
