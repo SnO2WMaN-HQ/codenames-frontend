@@ -41,7 +41,7 @@ export const RoomPage: React.VFC = () => {
   const [game, setGame] = useState<
     undefined | {
       dimension: [number, number];
-      deck: { key: number; word: string; suggestedBy: string[]; }[];
+      deck: { key: number; role: null | number; word: string; suggestedBy: string[]; }[];
       teams: { operatives: { playerId: string; }[]; spymasters: { playerId: string; }[]; }[];
     }
   >(undefined);
@@ -124,27 +124,55 @@ export const RoomPage: React.VFC = () => {
         }
         case "SYNC_GAME": {
           const { payload } = data;
-          const { deck, teams } = payload;
-          console.dir(payload);
-          setGame({
-            dimension: [5, 5],
-            deck: deck.map((
-              { word, key, suggested_by: suggestedBy }: {
-                word: string;
-                key: number;
-                suggested_by: string[];
-              },
-            ) => ({ word, key, suggestedBy })),
-            teams: teams.map((
-              { operatives, spymasters }: {
-                operatives: { player_id: string; }[];
-                spymasters: { player_id: string; }[];
-              },
-            ) => ({
-              operatives: operatives.map(({ player_id }) => ({ playerId: player_id })),
-              spymasters: spymasters.map(({ player_id }) => ({ playerId: player_id })),
-            })),
-          });
+          switch (payload.for) {
+            case "all": {
+              const { deck, teams } = payload;
+              setGame({
+                dimension: [5, 5],
+                deck: deck.map((
+                  { word, key, suggested_by: suggestedBy }: {
+                    word: string;
+                    key: number;
+                    suggested_by: string[];
+                  },
+                ) => ({ word, key, role: null, suggestedBy })),
+                teams: teams.map((
+                  { operatives, spymasters }: {
+                    operatives: { player_id: string; }[];
+                    spymasters: { player_id: string; }[];
+                  },
+                ) => ({
+                  operatives: operatives.map(({ player_id }) => ({ playerId: player_id })),
+                  spymasters: spymasters.map(({ player_id }) => ({ playerId: player_id })),
+                })),
+              });
+              break;
+            }
+            case "spymaster": {
+              const { deck, teams } = payload;
+              setGame({
+                dimension: [5, 5],
+                deck: deck.map((
+                  { word, key, role, suggested_by: suggestedBy }: {
+                    word: string;
+                    key: number;
+                    role: number;
+                    suggested_by: string[];
+                  },
+                ) => ({ word, key, role, suggestedBy })),
+                teams: teams.map((
+                  { operatives, spymasters }: {
+                    operatives: { player_id: string; }[];
+                    spymasters: { player_id: string; }[];
+                  },
+                ) => ({
+                  operatives: operatives.map(({ player_id }) => ({ playerId: player_id })),
+                  spymasters: spymasters.map(({ player_id }) => ({ playerId: player_id })),
+                })),
+              });
+              break;
+            }
+          }
         }
       }
     });
@@ -234,7 +262,8 @@ export const Card: React.VFC<{
   handleAddSuggest(): void;
   handleRemoveSuggest(): void;
   handleSelect(): void;
-}> = ({ className, word, handleAddSuggest, handleRemoveSuggest, suggestors, handleSelect }) => {
+  role: number | null;
+}> = ({ className, word, handleAddSuggest, handleRemoveSuggest, suggestors, handleSelect, role }) => {
   const [suggesting, setSuggesting] = useState<boolean>(false);
 
   return (
@@ -242,7 +271,22 @@ export const Card: React.VFC<{
       className={clsx(
         className,
         ["relative"],
-        ["bg-white"],
+        [
+          { "bg-slate-600": role === -1 },
+          { "bg-slate-100": role === 0 },
+          { "bg-cyan-200": role === 1 },
+          { "bg-orange-200": role === 2 },
+        ],
+        [
+          "border",
+          "rounded-md",
+          [
+            { "bg-slate-800": role === -1 },
+            { "border-slate-300": role === 0 },
+            { "border-cyan-400": role === 1 },
+            { "border-orange-400": role === 2 },
+          ],
+        ],
         ["shadow-md"],
         ["select-none"],
         [["w-36"], ["h-24"]],
@@ -258,11 +302,35 @@ export const Card: React.VFC<{
         else handleAddSuggest();
       }}
     >
-      <span className={clsx(["text-center"])}>{word}</span>
+      <span
+        className={clsx(
+          [
+            {
+              "text-slate-900": !role || role !== -1,
+              "text-white": role === -1,
+            },
+          ],
+          ["text-center"],
+        )}
+      >
+        {word}
+      </span>
       <div className={clsx(["flex", ["flex-col"]])}>
         {suggestors.map(({ id, name }) => (
           <div key={id}>
-            <span className={clsx(["text-sm"])}>{name}</span>
+            <span
+              className={clsx(
+                [
+                  {
+                    "text-slate-900": !role || role !== -1,
+                    "text-white": role === -1,
+                  },
+                ],
+                ["text-sm"],
+              )}
+            >
+              {name}
+            </span>
           </div>
         ))}
       </div>
@@ -356,7 +424,7 @@ export const Game: React.VFC<{
   handleJoinSpymaster(team: number): void;
   game: {
     dimension: [number, number];
-    deck: { key: number; word: string; suggestedBy: string[]; }[];
+    deck: { key: number; word: string; role: number | null; suggestedBy: string[]; }[];
     teams: { operatives: { playerId: string; }[]; spymasters: { playerId: string; }[]; }[];
   };
   playerList: { id: string; name: string; }[];
@@ -375,7 +443,7 @@ export const Game: React.VFC<{
     <div className={clsx(["flex"], ["justify-center"])}>
       {game.teams.map(({ operatives, spymasters }, i) => (
         <Team
-          key={i}
+          key={i + 1}
           team={i + 1}
           operatives={operatives}
           spymasters={spymasters}
@@ -395,10 +463,11 @@ export const Game: React.VFC<{
           gridTemplateRows: `repeat(${game.dimension[1]}, minmax(0, 1fr))`,
         }}
       >
-        {game.deck.map(({ word, key, suggestedBy }) => (
+        {game.deck.map(({ word, key, suggestedBy, role }) => (
           <Card
             key={key}
             word={word}
+            role={role}
             suggestors={suggestedBy
               .map((sg) => playerList.find(({ id }) => id === sg))
               .filter((v): v is { id: string; name: string; } => Boolean(v))}
