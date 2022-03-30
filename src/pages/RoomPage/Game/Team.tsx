@@ -24,19 +24,17 @@ export const Team: React.VFC<
     <div
       className={clsx(
         className,
-        ["px-8"],
-        ["py-4"],
+        ["px-4"],
+        ["py-2"],
+        ["border"],
         [
-          {
-            "bg-cyan-50": team === 1,
-            "bg-orange-50": team === 2,
-          },
-        ],
-        [
-          "border",
-          [
-            { "border-cyan-400": team === 1 },
-            { "border-orange-400": team === 2 },
+          team === 1 && [
+            ["bg-sky-200", "dark:bg-sky-700"],
+            ["border-sky-400", "dark:border-sky-400"],
+          ],
+          team === 2 && [
+            ["bg-orange-200", "dark:bg-orange-700"],
+            ["border-orange-400", "dark:border-orange-400"],
           ],
         ],
         ["flex", ["flex-col"]],
@@ -53,22 +51,33 @@ export const Team: React.VFC<
             ["text-lg"],
             ["font-bold"],
             [
-              {
-                "text-cyan-400": team === 1,
-                "text-orange-400": team === 2,
-              },
+              team === 1 && [
+                ["text-sky-600", "dark:text-sky-300"],
+              ],
+              team === 2 && [
+                ["text-orange-600", "dark:text-orange-300"],
+              ],
             ],
           )}
         >
           Operative
         </span>
-        <div
-          className={clsx(["flex"])}
-        >
+        <div className={clsx(["mt-1"], ["flex"])}>
           {operatives.map(({ playerId }) => (
             <span
               key={playerId}
-              className={clsx(["mr-2"])}
+              className={clsx(
+                ["mr-1"],
+                ["text-sm"],
+                [
+                  team === 1 && [
+                    ["text-sky-600", "dark:text-sky-300"],
+                  ],
+                  team === 2 && [
+                    ["text-orange-600", "dark:text-orange-300"],
+                  ],
+                ],
+              )}
             >
               {players.find(({ id }) => id === playerId)?.name}
             </span>
@@ -84,35 +93,43 @@ export const Team: React.VFC<
           join as operative
         </button>
       </div>
-      <div
-        className={clsx(
-          ["mt-2"],
-          ["flex", ["flex-col"]],
-        )}
-      >
+      <div className={clsx(["mt-2"], ["flex", ["flex-col"]])}>
         <span
           className={clsx(
             className,
             ["text-lg"],
             ["font-bold"],
             [
-              {
-                "text-cyan-400": team === 1,
-                "text-orange-400": team === 2,
-              },
+              team === 1 && [
+                ["text-sky-600", "dark:text-sky-300"],
+              ],
+              team === 2 && [
+                ["text-orange-600", "dark:text-orange-300"],
+              ],
             ],
           )}
         >
           Spymaster
         </span>
-        <div className={clsx(["flex"])}>
+        <div className={clsx([["mt-1"], "flex"])}>
           {spymasters.map(({ playerId }) => (
-            <div
+            <span
               key={playerId}
-              className={clsx(["mr-2"])}
+              className={clsx(
+                ["mr-1"],
+                ["text-sm"],
+                [
+                  team === 1 && [
+                    ["text-sky-600", "dark:text-sky-300"],
+                  ],
+                  team === 2 && [
+                    ["text-orange-600", "dark:text-orange-300"],
+                  ],
+                ],
+              )}
             >
-              <span>{players.find(({ id }) => id === playerId)?.name}</span>
-            </div>
+              {players.find(({ id }) => id === playerId)?.name}
+            </span>
           ))}
         </div>
         <button

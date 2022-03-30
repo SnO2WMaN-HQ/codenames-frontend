@@ -42,16 +42,18 @@ export const Game: React.VFC<{
         ["py-4"],
         ["flex"],
         ["justify-center"],
+        /*
         [
           [
-            { "bg-cyan-100": game.turn === 1 },
+            { "bg-sky-100": game.turn === 1 },
             { "bg-orange-100": game.turn === 2 },
           ],
         ],
+        */
       )}
     >
       <div
-        className={clsx(["grid", ["gap-6"]])}
+        className={clsx(["grid", ["gap-1"]])}
         style={{
           gridTemplateColumns: `repeat(${game.dimension[0]}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${game.dimension[1]}, minmax(0, 1fr))`,
@@ -80,28 +82,29 @@ export const Game: React.VFC<{
         ))}
       </div>
       <div
-        className={clsx(
-          ["ml-8"],
-          ["flex-grow"],
-          ["flex", ["flex-col"]],
-          ["space-y-4"],
-        )}
+        className={clsx(["ml-1"], ["flex-grow"])}
       >
-        {game.teams.map(({ operatives, spymasters }, i) => (
-          <Team
-            key={i + 1}
-            team={i + 1}
-            operatives={operatives}
-            spymasters={spymasters}
-            players={playerList}
-            handleJoinOperative={(t) => {
-              handleJoinOperative(t);
-            }}
-            handleJoinSpymaster={(t) => {
-              handleJoinSpymaster(t);
-            }}
-          />
-        ))}
+        <div
+          className={clsx(
+            ["grid", ["grid-cols-2"], ["gap-x-1"], ["gap-y-1"]],
+          )}
+        >
+          {game.teams.map(({ operatives, spymasters }, i) => (
+            <Team
+              key={i + 1}
+              team={i + 1}
+              operatives={operatives}
+              spymasters={spymasters}
+              players={playerList}
+              handleJoinOperative={(t) => {
+                handleJoinOperative(t);
+              }}
+              handleJoinSpymaster={(t) => {
+                handleJoinSpymaster(t);
+              }}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
