@@ -21,7 +21,7 @@ export const Game: React.VFC<{
     )[];
   };
   myPlayerId: string;
-  playerList: { id: string; name: string; }[];
+  findPlayer: (id: string) => undefined | { name: string; };
   handleSendHint(hint: string, num: number): void;
   handleAddSuggest(key: number): void;
   handleRemoveSuggest(key: number): void;
@@ -32,9 +32,9 @@ export const Game: React.VFC<{
   {
     game,
     myPlayerId,
-    playerList,
     handleAddSuggest: handleSuggest,
     handleRemoveSuggest,
+    findPlayer,
     handleSelect,
     handleJoinOperative,
     handleJoinSpymaster,
@@ -105,9 +105,7 @@ export const Game: React.VFC<{
               myTeam={myTeam}
               canTurnNow={canTurnCardNow}
               suggesting={suggestedBy.includes(myPlayerId)}
-              suggestors={suggestedBy
-                .map((sg) => playerList.find(({ id }) => id === sg))
-                .filter((v): v is { id: string; name: string; } => Boolean(v))}
+              suggestors={suggestedBy.map((id) => ({ id, ...findPlayer(id) }))}
               handleAddSuggest={() => {
                 handleSuggest(key);
               }}
@@ -143,7 +141,7 @@ export const Game: React.VFC<{
               me={me}
               operatives={operatives}
               spymasters={spymasters}
-              playersList={playerList}
+              findPlayer={findPlayer}
               handleJoinOperative={(t) => {
                 handleJoinOperative(t);
               }}
@@ -164,9 +162,9 @@ export const Game: React.VFC<{
             <div key={i}>
               <span>
                 {item.type === "submit_hint"
-                  && <>{item.word} x{item.count} by {item.by}</>}
+                  && <>{item.word} x{item.count} by {findPlayer(item.by)?.name}</>}
                 {item.type === "select"
-                  && <>{item.key} by {item.by}</>}
+                  && <>{item.key} by {findPlayer(item.by)?.name}</>}
                 {item.type === "lose_team"
                   && <>lose {item.team}</>}
                 {item.type === "end_turn"

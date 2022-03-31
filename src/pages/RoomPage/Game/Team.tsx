@@ -10,8 +10,8 @@ export const Team: React.VFC<
     handleJoinSpymaster(team: number): void;
     operatives: { playerId: string; }[];
     spymasters: { playerId: string; }[];
-    playersList: { id: string; name: string; }[];
     me: null | { playerId: string; team: number; role: "spymaster" | "operative"; };
+    findPlayer: (id: string) => undefined | { name: string; };
   }
 > = ({
   className,
@@ -20,26 +20,16 @@ export const Team: React.VFC<
   spymasters,
   handleJoinOperative,
   handleJoinSpymaster,
-  playersList,
+  findPlayer,
   me,
 }) => {
   const ops = useMemo(
-    () =>
-      operatives.map(({ playerId }) => ({
-        id: playerId,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        name: (playersList.find(({ id }) => id === playerId)!.name),
-      })),
-    [playersList, operatives],
+    () => operatives.map(({ playerId }) => ({ id: playerId, ...findPlayer(playerId) })),
+    [operatives, findPlayer],
   );
   const sms = useMemo(
-    () =>
-      spymasters.map(({ playerId }) => ({
-        id: playerId,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        name: (playersList.find(({ id }) => id === playerId)!.name),
-      })),
-    [playersList, spymasters],
+    () => spymasters.map(({ playerId }) => ({ id: playerId, ...findPlayer(playerId) })),
+    [spymasters, findPlayer],
   );
 
   const canJoinOperative = useMemo(

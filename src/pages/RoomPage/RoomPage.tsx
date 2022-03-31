@@ -38,6 +38,11 @@ export const RoomPage: React.VFC = () => {
     [isHostIsMe, playersList],
   );
   const [isPlaying, setIsPlaying] = useState<boolean | undefined>();
+  const findPlayer = useMemo<(id: string) => { name: string; } | undefined>(() =>
+    (arg) => {
+      const p = rawPlayersList?.find(({ id }) => arg === id);
+      return p && { name: p.name };
+    }, [rawPlayersList]);
 
   const [game, setGame] = useState<
     undefined | {
@@ -233,7 +238,7 @@ export const RoomPage: React.VFC = () => {
         <Game
           game={game}
           myPlayerId={playerId}
-          playerList={playersList}
+          findPlayer={findPlayer}
           handleAddSuggest={(key) => {
             if (!wsRef.current || !playerId) return;
 

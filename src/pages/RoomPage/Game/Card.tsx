@@ -6,7 +6,7 @@ export const Card: React.VFC<{
   className?: string;
   word: string;
   suggesting: boolean;
-  suggestors: { id: string; name: string; }[];
+  suggestors: { id: string; name?: string; }[];
   handleAddSuggest(): void;
   handleRemoveSuggest(): void;
   handleSelect(): void;
