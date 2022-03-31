@@ -16,12 +16,12 @@ export const Game: React.VFC<{
     deck: { key: number; word: string; role: number | null; suggestedBy: string[]; }[];
     teams: { operatives: { playerId: string; }[]; spymasters: { playerId: string; }[]; }[];
   };
-  playerId: string;
+  myPlayerId: string;
   playerList: { id: string; name: string; }[];
 }> = (
   {
     game,
-    playerId,
+    myPlayerId,
     playerList,
     handleAddSuggest: handleSuggest,
     handleRemoveSuggest,
@@ -30,10 +30,31 @@ export const Game: React.VFC<{
     handleJoinSpymaster,
   },
 ) => {
-  const selectable = useMemo(
-    () => game.teams[game.turn - 1].operatives.find(({ playerId: id }) => id === playerId) !== undefined,
-    [game, playerId],
+  const myTeam = useMemo<null | number>(
+    () => {
+      const i = game.teams.findIndex(({ operatives, spymasters }) =>
+        operatives.find(({ playerId }) => playerId === myPlayerId) !== undefined
+        || spymasters.find(({ playerId }) => playerId === myPlayerId) !== undefined
+      );
+      if (i === -1) return null;
+      return i + 1;
+    },
+    [game, myPlayerId],
   );
+  const me = useMemo<null | { playerId: string; team: number; role: "spymaster" | "operative"; }>(() => {
+    const opi = game.teams.findIndex(({ operatives }) =>
+      operatives.find(({ playerId }) => playerId === myPlayerId) !== undefined
+    );
+    if (opi !== -1) return { playerId: myPlayerId, team: opi + 1, role: "operative" };
+
+    const smi = game.teams.findIndex(({ spymasters }) =>
+      spymasters.find(({ playerId }) => playerId === myPlayerId) !== undefined
+    );
+    if (smi !== -1) return { playerId: myPlayerId, team: smi + 1, role: "spymaster" };
+    return null;
+  }, [game, myPlayerId]);
+  const isMyTurnNow = useMemo(() => game.turn === me?.team, [game, me]);
+  const canTurnCardNow = useMemo(() => isMyTurnNow && me?.role === "operative", [me, isMyTurnNow]);
 
   return (
     <div
@@ -64,8 +85,10 @@ export const Game: React.VFC<{
             key={key}
             word={word}
             role={role}
-            selectable={selectable}
-            suggesting={suggestedBy.includes(playerId)}
+            me={me}
+            myTeam={myTeam}
+            canTurnNow={canTurnCardNow}
+            suggesting={suggestedBy.includes(myPlayerId)}
             suggestors={suggestedBy
               .map((sg) => playerList.find(({ id }) => id === sg))
               .filter((v): v is { id: string; name: string; } => Boolean(v))}
@@ -93,9 +116,10 @@ export const Game: React.VFC<{
             <Team
               key={i + 1}
               team={i + 1}
+              me={me}
               operatives={operatives}
               spymasters={spymasters}
-              players={playerList}
+              playersList={playerList}
               handleJoinOperative={(t) => {
                 handleJoinOperative(t);
               }}

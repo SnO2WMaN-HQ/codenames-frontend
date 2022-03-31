@@ -179,9 +179,9 @@ export const RoomPage: React.VFC = () => {
       {!isPlaying && <GameStarter startGame={sendStartGame} startable={isStartable} />}
       {playerId && playersList && isPlaying && game && (
         <Game
-          playerId={playerId}
-          playerList={playersList}
           game={game}
+          myPlayerId={playerId}
+          playerList={playersList}
           handleAddSuggest={(key) => {
             if (!wsRef.current || !playerId) return;
 

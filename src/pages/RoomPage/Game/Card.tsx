@@ -7,13 +7,25 @@ export const Card: React.VFC<{
   word: string;
   suggesting: boolean;
   suggestors: { id: string; name: string; }[];
-  selectable: boolean;
   handleAddSuggest(): void;
   handleRemoveSuggest(): void;
   handleSelect(): void;
   role: number | null;
+  myTeam: number | null;
+  me: null | { playerId: string; team: number; role: "spymaster" | "operative"; };
+  canTurnNow: boolean;
 }> = (
-  { className, selectable, suggesting, word, handleAddSuggest, handleRemoveSuggest, suggestors, handleSelect, role },
+  {
+    className,
+    canTurnNow,
+    suggesting,
+    word,
+    handleAddSuggest,
+    handleRemoveSuggest,
+    handleSelect,
+    suggestors,
+    role,
+  },
 ) => {
   return (
     <div
@@ -110,7 +122,7 @@ export const Card: React.VFC<{
           </span>
         ))}
       </div>
-      {selectable && (
+      {role === null && canTurnNow && (
         <div
           className={clsx(["absolute", ["inset-0"], ["z-0"]], ["cursor-pointer"])}
           onClick={(e) => {
@@ -121,7 +133,7 @@ export const Card: React.VFC<{
         >
         </div>
       )}
-      {selectable && (
+      {role === null && canTurnNow && (
         <button
           className={clsx(
             ["absolute", ["bottom-1"], ["right-1"], ["z-0"]],
@@ -131,7 +143,7 @@ export const Card: React.VFC<{
             ["group"],
             [
               ["bg-slate-300", "hover:bg-slate-400"],
-              ["dark:bg-slate-700", "dark:hover:bg-slate-500"],
+              ["dark:bg-slate-700", "dark:hover:bg-slate-600"],
             ],
             [
               "border",
@@ -151,7 +163,7 @@ export const Card: React.VFC<{
             className={clsx(
               ["text-xl"],
               [
-                ["text-slate-500", "group-hover:text-slate-700"],
+                ["text-slate-500", "group-hover:text-slate-600"],
                 ["dark:text-slate-400", "dark:group-hover:text-slate-300"],
               ],
             )}
