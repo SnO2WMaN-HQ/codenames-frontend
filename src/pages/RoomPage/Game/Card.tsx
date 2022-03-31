@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import React from "react";
+import { HiExclamationCircle } from "react-icons/hi";
 
 export const Card: React.VFC<{
   className?: string;
@@ -76,7 +77,7 @@ export const Card: React.VFC<{
       <div
         className={clsx(
           ["w-full"],
-          ["pr-2"],
+          ["pr-8"],
           ["flex", ["flex-wrap"]],
         )}
       >
@@ -123,9 +124,11 @@ export const Card: React.VFC<{
       {selectable && (
         <button
           className={clsx(
-            ["absolute", ["bottom-0.5"], ["right-0.5"], ["z-0"]],
-            [["w-8"], ["h-8"]],
+            ["absolute", ["bottom-1"], ["right-1"], ["z-0"]],
+            [["w-6"], ["h-6"]],
+            ["cursor-pointer"],
             ["rounded-md"],
+            ["group"],
             [
               ["bg-slate-300", "hover:bg-slate-400"],
               ["dark:bg-slate-700", "dark:hover:bg-slate-500"],
@@ -137,19 +140,22 @@ export const Card: React.VFC<{
                 ["dark:border-slate-400"],
               ],
             ],
-            [
-              ["text-slate-500", "hover:text-slate-700"],
-              ["dark:text-slate-400", "dark:hover:text-slate-300"],
-            ],
-            ["cursor-pointer"],
-            ["text-sm"],
+            ["flex", ["justify-center"], ["items-center"]],
           )}
           onClick={(e) => {
             e.preventDefault();
             handleSelect();
           }}
         >
-          GO!
+          <HiExclamationCircle
+            className={clsx(
+              ["text-xl"],
+              [
+                ["text-slate-500", "group-hover:text-slate-700"],
+                ["dark:text-slate-400", "dark:group-hover:text-slate-300"],
+              ],
+            )}
+          />
         </button>
       )}
     </div>

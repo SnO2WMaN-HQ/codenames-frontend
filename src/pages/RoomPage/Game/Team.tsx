@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import React from "react";
+import { HiOutlinePlus } from "react-icons/hi";
 
 export const Team: React.VFC<
   {
@@ -45,24 +46,74 @@ export const Team: React.VFC<
           ["flex", ["flex-col"]],
         )}
       >
-        <span
+        <div
           className={clsx(
-            className,
-            ["text-lg"],
-            ["font-bold"],
-            [
-              team === 1 && [
-                ["text-sky-600", "dark:text-sky-300"],
-              ],
-              team === 2 && [
-                ["text-orange-600", "dark:text-orange-300"],
-              ],
-            ],
+            ["flex", [["items-center"]]],
           )}
         >
-          Operative
-        </span>
-        <div className={clsx(["mt-1"], ["flex"])}>
+          <button
+            className={clsx(
+              [["px-1"], ["py-1"]],
+              ["rounded-md"],
+              ["group"],
+              ["border"],
+              [
+                team === 1 && [
+                  [
+                    ["bg-sky-100", "hover:bg-sky-300"],
+                    ["dark:bg-sky-800", "dark:hover:bg-sky-600"],
+                  ],
+                  ["border-sky-600", "dark:border-sky-300"],
+                ],
+                team === 2 && [
+                  [
+                    ["bg-orange-100", "hover:bg-orange-300"],
+                    ["dark:bg-orange-800", "dark:hover:bg-orange-600"],
+                  ],
+                  ["border-orange-600", "dark:border-orange-300"],
+                ],
+              ],
+            )}
+            onClick={(e) => {
+              e.preventDefault();
+              handleJoinOperative(team);
+            }}
+          >
+            <HiOutlinePlus
+              className={clsx(
+                [
+                  team === 1 && [
+                    [
+                      ["text-sky-600", "group-hover:text-sky-700"],
+                      ["dark:text-sky-300", "dark:group-hover:text-sky-400"],
+                    ],
+                  ],
+                  team === 2 && [
+                    [
+                      ["text-orange-600", "group-hover:text-orange-700"],
+                      ["dark:text-orange-300", "dark:group-hover:text-orange-400"],
+                    ],
+                  ],
+                ],
+              )}
+            />
+          </button>
+          <span
+            className={clsx(
+              className,
+              ["ml-2"],
+              ["text-lg"],
+              ["font-bold"],
+              [
+                team === 1 && [["text-sky-600", "dark:text-sky-300"]],
+                team === 2 && [["text-orange-600", "dark:text-orange-300"]],
+              ],
+            )}
+          >
+            Operative
+          </span>
+        </div>
+        <div className={clsx(["mt-2"], ["flex"])}>
           {operatives.map(({ playerId }) => (
             <span
               key={playerId}
@@ -83,35 +134,76 @@ export const Team: React.VFC<
             </span>
           ))}
         </div>
-        <button
-          className={clsx(["mt-2"])}
-          onClick={(e) => {
-            e.preventDefault();
-            handleJoinOperative(team);
-          }}
-        >
-          join as operative
-        </button>
       </div>
-      <div className={clsx(["mt-2"], ["flex", ["flex-col"]])}>
-        <span
+      <div className={clsx(["mt-4"], ["flex", ["flex-col"]])}>
+        <div
           className={clsx(
-            className,
-            ["text-lg"],
-            ["font-bold"],
-            [
-              team === 1 && [
-                ["text-sky-600", "dark:text-sky-300"],
-              ],
-              team === 2 && [
-                ["text-orange-600", "dark:text-orange-300"],
-              ],
-            ],
+            ["flex", [["items-center"]]],
           )}
         >
-          Spymaster
-        </span>
-        <div className={clsx([["mt-1"], "flex"])}>
+          <button
+            className={clsx(
+              [["px-1"], ["py-1"]],
+              ["rounded-md"],
+              ["group"],
+              ["border"],
+              [
+                team === 1 && [
+                  [
+                    ["bg-sky-100", "hover:bg-sky-300"],
+                    ["dark:bg-sky-800", "dark:hover:bg-sky-600"],
+                  ],
+                  ["border-sky-600", "dark:border-sky-300"],
+                ],
+                team === 2 && [
+                  [
+                    ["bg-orange-100", "hover:bg-orange-300"],
+                    ["dark:bg-orange-800", "dark:hover:bg-orange-600"],
+                  ],
+                  ["border-orange-600", "dark:border-orange-300"],
+                ],
+              ],
+            )}
+            onClick={(e) => {
+              e.preventDefault();
+              handleJoinSpymaster(team);
+            }}
+          >
+            <HiOutlinePlus
+              className={clsx(
+                [
+                  team === 1 && [
+                    [
+                      ["text-sky-600", "group-hover:text-sky-700"],
+                      ["dark:text-sky-300", "dark:group-hover:text-sky-400"],
+                    ],
+                  ],
+                  team === 2 && [
+                    [
+                      ["text-orange-600", "group-hover:text-orange-700"],
+                      ["dark:text-orange-300", "dark:group-hover:text-orange-400"],
+                    ],
+                  ],
+                ],
+              )}
+            />
+          </button>
+          <span
+            className={clsx(
+              className,
+              ["ml-2"],
+              ["text-lg"],
+              ["font-bold"],
+              [
+                team === 1 && [["text-sky-600", "dark:text-sky-300"]],
+                team === 2 && [["text-orange-600", "dark:text-orange-300"]],
+              ],
+            )}
+          >
+            Spymaster
+          </span>
+        </div>
+        <div className={clsx([["mt-2"], "flex"])}>
           {spymasters.map(({ playerId }) => (
             <span
               key={playerId}
@@ -132,15 +224,6 @@ export const Team: React.VFC<
             </span>
           ))}
         </div>
-        <button
-          className={clsx(["mt-2"])}
-          onClick={(e) => {
-            e.preventDefault();
-            handleJoinSpymaster(team);
-          }}
-        >
-          join as spymaster
-        </button>
       </div>
     </div>
   );
