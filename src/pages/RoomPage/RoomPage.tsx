@@ -46,6 +46,13 @@ export const RoomPage: React.VFC = () => {
       deck: { key: number; role: null | number; word: string; suggestedBy: string[]; }[];
       teams: { operatives: { playerId: string; }[]; spymasters: { playerId: string; }[]; }[];
       currentHint: null | { word: string; count: number; };
+      history: (
+        | { type: "submit_hint"; by: string; word: string; count: number; }
+        | { type: "select"; by: string; key: number; }
+        | { type: "lose_team"; team: number; }
+        | { type: "end_turn"; from: number; to: number; }
+        | { type: "end_game"; }
+      )[];
     }
   >(undefined);
 
@@ -127,7 +134,8 @@ export const RoomPage: React.VFC = () => {
         }
         case "SYNC_GAME": {
           const { payload } = data;
-          const { deck, teams, turn, current_hint: currentHint } = payload;
+          const { deck, teams, turn, current_hint: currentHint, history } = payload;
+          console.dir(history);
           setGame({
             dimension: [5, 5],
             turn,
@@ -151,6 +159,46 @@ export const RoomPage: React.VFC = () => {
               operatives: operatives.map(({ player_id }) => ({ playerId: player_id })),
               spymasters: spymasters.map(({ player_id }) => ({ playerId: player_id })),
             })),
+            history: history.map((item: any) => {
+              switch (item.type) {
+                case "submit_hint": {
+                  const { type, count, player_id, word } = item as {
+                    type: "submit_hint";
+                    player_id: string;
+                    word: string;
+                    count: number;
+                  };
+                  return { type, count, by: player_id, word };
+                }
+                case "select": {
+                  const { type, player_id, key } = item as {
+                    type: "select";
+                    player_id: string;
+                    key: number;
+                  };
+                  return { type, by: player_id, key };
+                }
+                case "lose_team": {
+                  const { type, team } = item as {
+                    type: "submit_hint";
+                    team: number;
+                  };
+                  return { type, team };
+                }
+                case "end_turn": {
+                  const { type, from, to } = item as {
+                    type: "end_turn";
+                    from: number;
+                    to: number;
+                  };
+                  return { type, from, to };
+                }
+                case "end_game": {
+                  const { type } = item as { type: "end_game"; };
+                  return { type };
+                }
+              }
+            }),
           });
         }
       }
@@ -226,7 +274,6 @@ export const RoomPage: React.VFC = () => {
           }}
           handleSendHint={(hint, num) => {
             if (!wsRef.current || !playerId) return;
-            console.log(hint, num);
             wsRef.current.send(JSON.stringify({
               method: "UPDATE_GAME",
               payload: { type: "submit_hint", player_id: playerId, word: hint, count: num },

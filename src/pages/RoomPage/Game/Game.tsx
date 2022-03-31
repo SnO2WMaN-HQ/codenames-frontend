@@ -12,6 +12,13 @@ export const Game: React.VFC<{
     deck: { key: number; word: string; role: number | null; suggestedBy: string[]; }[];
     teams: { operatives: { playerId: string; }[]; spymasters: { playerId: string; }[]; }[];
     currentHint: null | { word: string; count: number; };
+    history: (
+      | { type: "submit_hint"; by: string; word: string; count: number; }
+      | { type: "select"; by: string; key: number; }
+      | { type: "lose_team"; team: number; }
+      | { type: "end_turn"; from: number; to: number; }
+      | { type: "end_game"; }
+    )[];
   };
   myPlayerId: string;
   playerList: { id: string; name: string; }[];
@@ -122,7 +129,7 @@ export const Game: React.VFC<{
         />
       </div>
       <div
-        className={clsx(["ml-1"], ["flex-grow"])}
+        className={clsx(["ml-1"], ["flex-grow"], ["flex", ["flex-col"]])}
       >
         <div
           className={clsx(
@@ -144,6 +151,30 @@ export const Game: React.VFC<{
                 handleJoinSpymaster(t);
               }}
             />
+          ))}
+        </div>
+        <div
+          className={clsx(
+            ["mt-1"],
+            ["flex-grow"],
+            ["flex", ["flex-col"]],
+          )}
+        >
+          {game.history.map((item, i) => (
+            <div key={i}>
+              <span>
+                {item.type === "submit_hint"
+                  && <>{item.word} x{item.count} by {item.by}</>}
+                {item.type === "select"
+                  && <>{item.key} by {item.by}</>}
+                {item.type === "lose_team"
+                  && <>lose {item.team}</>}
+                {item.type === "end_turn"
+                  && <>{item.from} to {item.to}</>}
+                {item.type === "end_game"
+                  && <>game set</>}
+              </span>
+            </div>
           ))}
         </div>
       </div>
