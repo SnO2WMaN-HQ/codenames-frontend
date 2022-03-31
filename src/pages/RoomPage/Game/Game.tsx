@@ -2,22 +2,25 @@ import clsx from "clsx";
 import React, { useMemo } from "react";
 
 import { Card } from "./Card";
+import { Hinter } from "./HintInput";
 import { Team } from "./Team";
 
 export const Game: React.VFC<{
-  handleAddSuggest(key: number): void;
-  handleRemoveSuggest(key: number): void;
-  handleSelect(key: number): void;
-  handleJoinOperative(team: number): void;
-  handleJoinSpymaster(team: number): void;
   game: {
     turn: number;
     dimension: [number, number];
     deck: { key: number; word: string; role: number | null; suggestedBy: string[]; }[];
     teams: { operatives: { playerId: string; }[]; spymasters: { playerId: string; }[]; }[];
+    currentHint: null | { word: string; count: number; };
   };
   myPlayerId: string;
   playerList: { id: string; name: string; }[];
+  handleSendHint(hint: string, num: number): void;
+  handleAddSuggest(key: number): void;
+  handleRemoveSuggest(key: number): void;
+  handleSelect(key: number): void;
+  handleJoinOperative(team: number): void;
+  handleJoinSpymaster(team: number): void;
 }> = (
   {
     game,
@@ -28,6 +31,7 @@ export const Game: React.VFC<{
     handleSelect,
     handleJoinOperative,
     handleJoinSpymaster,
+    handleSendHint,
   },
 ) => {
   const myTeam = useMemo<null | number>(
@@ -74,35 +78,48 @@ export const Game: React.VFC<{
       )}
     >
       <div
-        className={clsx(["grid", ["gap-1"]])}
-        style={{
-          gridTemplateColumns: `repeat(${game.dimension[0]}, minmax(0, 1fr))`,
-          gridTemplateRows: `repeat(${game.dimension[1]}, minmax(0, 1fr))`,
-        }}
+        className={clsx(
+          ["flex", ["flex-col"]],
+        )}
       >
-        {game.deck.map(({ word, key, suggestedBy, role }) => (
-          <Card
-            key={key}
-            word={word}
-            role={role}
-            me={me}
-            myTeam={myTeam}
-            canTurnNow={canTurnCardNow}
-            suggesting={suggestedBy.includes(myPlayerId)}
-            suggestors={suggestedBy
-              .map((sg) => playerList.find(({ id }) => id === sg))
-              .filter((v): v is { id: string; name: string; } => Boolean(v))}
-            handleAddSuggest={() => {
-              handleSuggest(key);
-            }}
-            handleRemoveSuggest={() => {
-              handleRemoveSuggest(key);
-            }}
-            handleSelect={() => {
-              handleSelect(key);
-            }}
-          />
-        ))}
+        <div
+          className={clsx(["grid", ["gap-1"]])}
+          style={{
+            gridTemplateColumns: `repeat(${game.dimension[0]}, minmax(0, 1fr))`,
+            gridTemplateRows: `repeat(${game.dimension[1]}, minmax(0, 1fr))`,
+          }}
+        >
+          {game.deck.map(({ word, key, suggestedBy, role }) => (
+            <Card
+              key={key}
+              word={word}
+              role={role}
+              me={me}
+              myTeam={myTeam}
+              canTurnNow={canTurnCardNow}
+              suggesting={suggestedBy.includes(myPlayerId)}
+              suggestors={suggestedBy
+                .map((sg) => playerList.find(({ id }) => id === sg))
+                .filter((v): v is { id: string; name: string; } => Boolean(v))}
+              handleAddSuggest={() => {
+                handleSuggest(key);
+              }}
+              handleRemoveSuggest={() => {
+                handleRemoveSuggest(key);
+              }}
+              handleSelect={() => {
+                handleSelect(key);
+              }}
+            />
+          ))}
+        </div>
+        <Hinter
+          className={clsx(["mt-1"], ["w-full"])}
+          max={25}
+          handleSendHint={(hint, num) => {
+            handleSendHint(hint, num);
+          }}
+        />
       </div>
       <div
         className={clsx(["ml-1"], ["flex-grow"])}

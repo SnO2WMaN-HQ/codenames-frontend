@@ -45,6 +45,7 @@ export const RoomPage: React.VFC = () => {
       dimension: [number, number];
       deck: { key: number; role: null | number; word: string; suggestedBy: string[]; }[];
       teams: { operatives: { playerId: string; }[]; spymasters: { playerId: string; }[]; }[];
+      currentHint: null | { word: string; count: number; };
     }
   >(undefined);
 
@@ -126,10 +127,13 @@ export const RoomPage: React.VFC = () => {
         }
         case "SYNC_GAME": {
           const { payload } = data;
-          const { deck, teams, turn } = payload;
+          const { deck, teams, turn, current_hint: currentHint } = payload;
           setGame({
             dimension: [5, 5],
             turn,
+            currentHint: (currentHint as { word: string; count: number; } | null) !== null
+              ? { word: currentHint.word, count: currentHint.count }
+              : null,
             deck: deck.map((
               { word, key, suggested_by: suggestedBy, role }: {
                 word: string;
@@ -218,6 +222,14 @@ export const RoomPage: React.VFC = () => {
             wsRef.current.send(JSON.stringify({
               method: "UPDATE_GAME",
               payload: { type: "join_spymaster", player_id: playerId, team },
+            }));
+          }}
+          handleSendHint={(hint, num) => {
+            if (!wsRef.current || !playerId) return;
+            console.log(hint, num);
+            wsRef.current.send(JSON.stringify({
+              method: "UPDATE_GAME",
+              payload: { type: "submit_hint", player_id: playerId, word: hint, count: num },
             }));
           }}
         />
