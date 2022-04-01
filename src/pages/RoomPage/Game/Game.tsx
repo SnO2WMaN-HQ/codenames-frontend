@@ -3,6 +3,7 @@ import React, { useMemo } from "react";
 
 import { Card } from "./Card";
 import { Hinter } from "./HintInput";
+import { History } from "./History";
 import { Team } from "./Team";
 
 export const Game: React.VFC<{
@@ -158,30 +159,14 @@ export const Game: React.VFC<{
             />
           ))}
         </div>
-        <div
+        <History
           className={clsx(
             ["mt-1"],
             ["flex-grow"],
-            ["flex", ["flex-col"]],
           )}
-        >
-          {game.history.map((item, i) => (
-            <div key={i}>
-              <span>
-                {item.type === "submit_hint"
-                  && <>{item.word} x{item.count} by {findPlayer(item.by)?.name}</>}
-                {item.type === "select"
-                  && <>{item.key} by {findPlayer(item.by)?.name}</>}
-                {item.type === "lose_team"
-                  && <>lose {item.team}</>}
-                {item.type === "end_turn"
-                  && <>{item.from} to {item.to}</>}
-                {item.type === "end_game"
-                  && <>game set</>}
-              </span>
-            </div>
-          ))}
-        </div>
+          history={game.history}
+          findPlayer={findPlayer}
+        />
       </div>
     </div>
   );
