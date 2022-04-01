@@ -66,6 +66,10 @@ export const Game: React.VFC<{
   }, [game, myPlayerId]);
   const isMyTurnNow = useMemo(() => game.turn === me?.team, [game, me]);
   const canTurnCardNow = useMemo(() => isMyTurnNow && me?.role === "operative", [me, isMyTurnNow]);
+  const requireHint = useMemo<boolean>(
+    () => game.currentHint === null && me?.team === game.turn && me?.role === "spymaster",
+    [game, me],
+  );
 
   return (
     <div
@@ -120,6 +124,9 @@ export const Game: React.VFC<{
         </div>
         <Hinter
           className={clsx(["mt-1"], ["w-full"])}
+          currentHint={game.currentHint}
+          requireHint={requireHint}
+          currentTeam={game.turn}
           max={25}
           handleSendHint={(hint, num) => {
             handleSendHint(hint, num);

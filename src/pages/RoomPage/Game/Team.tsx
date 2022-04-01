@@ -48,6 +48,7 @@ export const Team: React.VFC<
         className,
         ["px-4"],
         ["py-2"],
+        ["select-none"],
         ["border"],
         [
           team === 1 && [
