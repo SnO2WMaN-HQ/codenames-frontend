@@ -13,7 +13,7 @@ export const Game: React.VFC<{
     currentHint: null | { word: string; count: number; };
     deck: { key: number; word: string; role: number | null; suggestedBy: string[]; }[];
     dimension: [number, number];
-    teams: { operatives: { playerId: string; }[]; spymasters: { playerId: string; }[]; }[];
+    teams: { rank: number | null; operatives: { playerId: string; }[]; spymasters: { playerId: string; }[]; }[];
     history: (
       | { type: "submit_hint"; by: string; word: string; count: number; }
       | { type: "select_card"; by: string; key: number; }
@@ -75,22 +75,28 @@ export const Game: React.VFC<{
 
     return { id: i, name: p.name };
   }), [game, playersList]);
+  const gameWinner = useMemo(() => {
+    const i = game.teams.findIndex(({ rank }) => rank === 1);
+    if (i !== -1) return i + 1;
+    else return null;
+  }, [game]);
   const isMyTurnNow = useMemo(
     () => game.currentTurn === me?.team,
     [game, me],
   );
   const isRequiringHint = useMemo<boolean>(
-    () => isMyTurnNow && me?.role === "spymaster" && game.currentHint === null,
-    [game, isMyTurnNow, me?.role],
+    () => gameWinner === null && isMyTurnNow && me?.role === "spymaster" && game.currentHint === null,
+    [game, isMyTurnNow, me, gameWinner],
   );
   const canTurnCardNow = useMemo(
-    () => isMyTurnNow && me?.role === "operative" && game.currentHint !== null,
-    [game, isMyTurnNow, me],
+    () => gameWinner === null && isMyTurnNow && me?.role === "operative" && game.currentHint !== null,
+    [game, gameWinner, isMyTurnNow, me],
   );
 
   return (
     <div
       className={clsx(
+        ["relative"],
         ["px-4"],
         ["py-4"],
         ["flex"],
@@ -99,11 +105,15 @@ export const Game: React.VFC<{
     >
       <div
         className={clsx(
+          ["relative"],
           ["flex", ["flex-col"]],
         )}
       >
         <div
-          className={clsx(["grid", ["gap-1"]])}
+          className={clsx(
+            ["relative", ["z-0"]],
+            ["grid", ["gap-1"]],
+          )}
           style={{
             gridTemplateColumns: `repeat(${game.dimension[0]}, minmax(0, 1fr))`,
             gridTemplateRows: `repeat(${game.dimension[1]}, minmax(0, 1fr))`,
@@ -133,7 +143,11 @@ export const Game: React.VFC<{
           ))}
         </div>
         <Hinter
-          className={clsx(["mt-1"], ["w-full"])}
+          className={clsx(
+            ["relative", ["z-0"]],
+            ["mt-1"],
+            ["w-full"],
+          )}
           currentHint={game.currentHint}
           requireHint={isRequiringHint}
           currentTeam={game.currentTurn}
@@ -143,6 +157,40 @@ export const Game: React.VFC<{
             handleSendHint(me.playerId, hint, num);
           }}
         />
+        {gameWinner !== null && (
+          <div
+            className={clsx(
+              ["absolute", ["inset-0"], ["z-1"]],
+              ["bg-opacity-50", "dark:bg-opacity-75"],
+              [
+                gameWinner === 1 && [
+                  ["bg-sky-700", "dark:bg-sky-700"],
+                ],
+                gameWinner === 2 && [
+                  ["bg-orange-700", "dark:bg-orange-700"],
+                ],
+              ],
+              ["flex", ["justify-center"], ["items-center"]],
+            )}
+          >
+            <span
+              className={clsx(
+                ["text-2xl"],
+                ["font-bold"],
+                [
+                  gameWinner === 1 && [
+                    ["text-sky-100", "dark:text-sky-200"],
+                  ],
+                  gameWinner === 2 && [
+                    ["text-orange-100", "dark:text-orange-200"],
+                  ],
+                ],
+              )}
+            >
+              Team {gameWinner} Win!
+            </span>
+          </div>
+        )}
       </div>
       <div
         className={clsx(["ml-1"], ["flex-grow"], ["flex", ["flex-col"]])}

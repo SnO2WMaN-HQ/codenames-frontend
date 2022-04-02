@@ -25,7 +25,6 @@ export const Card: React.VFC<{
     <div
       className={clsx(
         className,
-        ["relative"],
         ["border"],
         [
           role === null && [

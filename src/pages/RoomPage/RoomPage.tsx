@@ -143,11 +143,13 @@ export const RoomPage: React.VFC = () => {
               },
             ) => ({ word, key, role, suggestedBy })),
             teams: teams.map((
-              { operatives, spymasters }: {
+              { operatives, spymasters, rank }: {
+                rank: number | null;
                 operatives: { player_id: string; }[];
                 spymasters: { player_id: string; }[];
               },
             ) => ({
+              rank,
               operatives: operatives.map(({ player_id }) => ({ playerId: player_id })),
               spymasters: spymasters.map(({ player_id }) => ({ playerId: player_id })),
             })),

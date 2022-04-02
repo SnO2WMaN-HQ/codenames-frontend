@@ -33,7 +33,6 @@ export const History: React.VFC<
     >
       <div
         className={clsx(
-          className,
           ["flex", ["flex-col"]],
           ["space-y-0.5"],
         )}
