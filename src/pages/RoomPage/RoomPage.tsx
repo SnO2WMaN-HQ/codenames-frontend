@@ -44,22 +44,7 @@ export const RoomPage: React.VFC = () => {
       return p && { name: p.name };
     }, [rawPlayersList]);
 
-  const [game, setGame] = useState<
-    undefined | {
-      turn: number;
-      dimension: [number, number];
-      deck: { key: number; role: null | number; word: string; suggestedBy: string[]; }[];
-      teams: { operatives: { playerId: string; }[]; spymasters: { playerId: string; }[]; }[];
-      currentHint: null | { word: string; count: number; };
-      history: (
-        | { type: "submit_hint"; by: string; word: string; count: number; }
-        | { type: "select"; by: string; key: number; }
-        | { type: "lose_team"; team: number; }
-        | { type: "end_turn"; from: number; to: number; }
-        | { type: "end_game"; }
-      )[];
-    }
-  >(undefined);
+  const [game, setGame] = useState<undefined | React.ComponentProps<typeof Game>["game"]>(undefined);
 
   const sendRename = (newName: string): void => {
     if (!wsRef.current || !playerId) return;
@@ -139,11 +124,18 @@ export const RoomPage: React.VFC = () => {
         }
         case "SYNC_GAME": {
           const { payload } = data;
-          const { deck, teams, turn, current_hint: currentHint, history } = payload;
-          console.dir(history);
+          const {
+            end,
+            current_turn: currentTurn,
+            current_hint: currentHint,
+            deck,
+            teams,
+            history,
+          } = payload;
           setGame({
+            end,
             dimension: [5, 5],
-            turn,
+            currentTurn,
             currentHint: (currentHint as { word: string; count: number; } | null) !== null
               ? { word: currentHint.word, count: currentHint.count }
               : null,
@@ -175,9 +167,9 @@ export const RoomPage: React.VFC = () => {
                   };
                   return { type, count, by: player_id, word };
                 }
-                case "select": {
+                case "select_card": {
                   const { type, player_id, key } = item as {
-                    type: "select";
+                    type: "select_card";
                     player_id: string;
                     key: number;
                   };
@@ -191,15 +183,23 @@ export const RoomPage: React.VFC = () => {
                   return { type, team };
                 }
                 case "end_turn": {
-                  const { type, from, to } = item as {
+                  const { type, team } = item as {
                     type: "end_turn";
-                    from: number;
-                    to: number;
+                    team: number;
                   };
-                  return { type, from, to };
+                  return { type, team };
+                }
+                case "start_turn": {
+                  const { type, team } = item as {
+                    type: "start_turn";
+                    team: number;
+                  };
+                  return { type, team };
                 }
                 case "end_game": {
-                  const { type } = item as { type: "end_game"; };
+                  const { type } = item as {
+                    type: "end_game";
+                  };
                   return { type };
                 }
               }
@@ -260,7 +260,7 @@ export const RoomPage: React.VFC = () => {
 
             wsRef.current.send(JSON.stringify({
               method: "UPDATE_GAME",
-              payload: { type: "select", player_id: playerId, key },
+              payload: { type: "select_card", player_id: playerId, key },
             }));
           }}
           handleJoinOperative={(team) => {

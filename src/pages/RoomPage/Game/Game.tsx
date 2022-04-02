@@ -8,16 +8,18 @@ import { Team } from "./Team";
 
 export const Game: React.VFC<{
   game: {
-    turn: number;
-    dimension: [number, number];
-    deck: { key: number; word: string; role: number | null; suggestedBy: string[]; }[];
-    teams: { operatives: { playerId: string; }[]; spymasters: { playerId: string; }[]; }[];
+    end: boolean;
+    currentTurn: number;
     currentHint: null | { word: string; count: number; };
+    deck: { key: number; word: string; role: number | null; suggestedBy: string[]; }[];
+    dimension: [number, number];
+    teams: { operatives: { playerId: string; }[]; spymasters: { playerId: string; }[]; }[];
     history: (
       | { type: "submit_hint"; by: string; word: string; count: number; }
-      | { type: "select"; by: string; key: number; }
+      | { type: "select_card"; by: string; key: number; }
       | { type: "lose_team"; team: number; }
-      | { type: "end_turn"; from: number; to: number; }
+      | { type: "end_turn"; team: number; }
+      | { type: "start_turn"; team: number; }
       | { type: "end_game"; }
     )[];
   };
@@ -65,10 +67,10 @@ export const Game: React.VFC<{
     if (smi !== -1) return { playerId: myPlayerId, team: smi + 1, role: "spymaster" };
     return null;
   }, [game, myPlayerId]);
-  const isMyTurnNow = useMemo(() => game.turn === me?.team, [game, me]);
+  const isMyTurnNow = useMemo(() => game.currentTurn === me?.team, [game, me]);
   const canTurnCardNow = useMemo(() => isMyTurnNow && me?.role === "operative", [me, isMyTurnNow]);
   const requireHint = useMemo<boolean>(
-    () => game.currentHint === null && me?.team === game.turn && me?.role === "spymaster",
+    () => game.currentHint === null && me?.team === game.currentTurn && me?.role === "spymaster",
     [game, me],
   );
 
@@ -127,7 +129,7 @@ export const Game: React.VFC<{
           className={clsx(["mt-1"], ["w-full"])}
           currentHint={game.currentHint}
           requireHint={requireHint}
-          currentTeam={game.turn}
+          currentTeam={game.currentTurn}
           max={25}
           handleSendHint={(hint, num) => {
             handleSendHint(hint, num);
@@ -162,7 +164,7 @@ export const Game: React.VFC<{
         <History
           className={clsx(
             ["mt-1"],
-            ["flex-grow"],
+            ["h-64"],
           )}
           history={game.history}
           findPlayer={findPlayer}
