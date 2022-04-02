@@ -38,11 +38,6 @@ export const RoomPage: React.VFC = () => {
     [isHostIsMe, playersList],
   );
   const [isPlaying, setIsPlaying] = useState<boolean | undefined>();
-  const findPlayer = useMemo<(id: string) => { name: string; } | undefined>(() =>
-    (arg) => {
-      const p = rawPlayersList?.find(({ id }) => arg === id);
-      return p && { name: p.name };
-    }, [rawPlayersList]);
 
   const [game, setGame] = useState<undefined | React.ComponentProps<typeof Game>["game"]>(undefined);
 
@@ -234,54 +229,57 @@ export const RoomPage: React.VFC = () => {
         onRename={sendRename}
       />
       {!isPlaying && <GameStarter startGame={sendStartGame} startable={isStartable} />}
-      {playerId && playersList && isPlaying && game && (
+      {playerId && isPlaying && playersList && game && (
         <Game
           game={game}
           myPlayerId={playerId}
-          findPlayer={findPlayer}
-          handleAddSuggest={(key) => {
-            if (!wsRef.current || !playerId) return;
+          playersList={playersList}
+          handleAddSuggest={(by, key) => {
+            if (!wsRef.current) return;
 
             wsRef.current.send(JSON.stringify({
               method: "UPDATE_GAME",
-              payload: { type: "add_suggest", player_id: playerId, key },
+              payload: { type: "add_suggest", player_id: by, key },
             }));
           }}
-          handleRemoveSuggest={(key) => {
-            if (!wsRef.current || !playerId) return;
+          handleRemoveSuggest={(by, key) => {
+            if (!wsRef.current) return;
 
             wsRef.current.send(JSON.stringify({
               method: "UPDATE_GAME",
-              payload: { type: "remove_suggest", player_id: playerId, key },
+              payload: { type: "remove_suggest", player_id: by, key },
             }));
           }}
-          handleSelect={(key) => {
-            if (!wsRef.current || !playerId) return;
+          handleSelectCard={(by, key) => {
+            if (!wsRef.current) return;
 
             wsRef.current.send(JSON.stringify({
               method: "UPDATE_GAME",
-              payload: { type: "select_card", player_id: playerId, key },
+              payload: { type: "select_card", player_id: by, key },
             }));
           }}
-          handleJoinOperative={(team) => {
-            if (!wsRef.current || !playerId) return;
+          handleJoinOperative={(by, team) => {
+            if (!wsRef.current) return;
+
             wsRef.current.send(JSON.stringify({
               method: "UPDATE_GAME",
-              payload: { type: "join_operative", player_id: playerId, team },
+              payload: { type: "join_operative", player_id: by, team },
             }));
           }}
-          handleJoinSpymaster={(team) => {
-            if (!wsRef.current || !playerId) return;
+          handleJoinSpymaster={(by, team) => {
+            if (!wsRef.current) return;
+
             wsRef.current.send(JSON.stringify({
               method: "UPDATE_GAME",
-              payload: { type: "join_spymaster", player_id: playerId, team },
+              payload: { type: "join_spymaster", player_id: by, team },
             }));
           }}
-          handleSendHint={(hint, num) => {
-            if (!wsRef.current || !playerId) return;
+          handleSendHint={(by, hint, num) => {
+            if (!wsRef.current) return;
+
             wsRef.current.send(JSON.stringify({
               method: "UPDATE_GAME",
-              payload: { type: "submit_hint", player_id: playerId, word: hint, count: num },
+              payload: { type: "submit_hint", player_id: by, word: hint, count: num },
             }));
           }}
         />

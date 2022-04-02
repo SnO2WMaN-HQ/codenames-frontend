@@ -5,23 +5,17 @@ import { HiExclamationCircle } from "react-icons/hi";
 export const Card: React.VFC<{
   className?: string;
   word: string;
-  suggesting: boolean;
-  suggestors: { id: string; name?: string; }[];
-  handleAddSuggest(): void;
-  handleRemoveSuggest(): void;
-  handleSelect(): void;
   role: number | null;
-  myTeam: number | null;
-  me: null | { playerId: string; team: number; role: "spymaster" | "operative"; };
   canTurnNow: boolean;
+  suggestors: { id: string; name?: string; }[];
+  handleTap(): void;
+  handleSelect(): void;
 }> = (
   {
     className,
     canTurnNow,
-    suggesting,
     word,
-    handleAddSuggest,
-    handleRemoveSuggest,
+    handleTap,
     handleSelect,
     suggestors,
     role,
@@ -127,8 +121,7 @@ export const Card: React.VFC<{
           className={clsx(["absolute", ["inset-0"], ["z-0"]], ["cursor-pointer"])}
           onClick={(e) => {
             e.preventDefault();
-            if (suggesting) handleRemoveSuggest();
-            else handleAddSuggest();
+            handleTap();
           }}
         >
         </div>

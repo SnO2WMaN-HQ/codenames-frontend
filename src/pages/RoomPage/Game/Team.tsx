@@ -11,7 +11,7 @@ export const Team: React.VFC<
     operatives: { playerId: string; }[];
     spymasters: { playerId: string; }[];
     me: null | { playerId: string; team: number; role: "spymaster" | "operative"; };
-    findPlayer: (id: string) => undefined | { name: string; };
+    findPlayer: (id: string) => null | { name: string; };
   }
 > = ({
   className,

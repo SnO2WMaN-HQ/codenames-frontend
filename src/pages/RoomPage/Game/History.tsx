@@ -4,7 +4,8 @@ import React from "react";
 export const History: React.VFC<
   {
     className?: string;
-    findPlayer: (id: string) => undefined | { name: string; };
+    findPlayer: (id: string) => null | { name: string; team: number | null; };
+    findCard: (key: number) => undefined | { word: string; role: number | null; };
     history: (
       | { type: "submit_hint"; by: string; word: string; count: number; }
       | { type: "select_card"; by: string; key: number; }
@@ -14,7 +15,7 @@ export const History: React.VFC<
       | { type: "end_game"; }
     )[];
   }
-> = ({ className, history, findPlayer }) => {
+> = ({ className, history, findPlayer, findCard }) => {
   return (
     <div
       className={clsx(
@@ -48,13 +49,13 @@ export const History: React.VFC<
             {item.type === "submit_hint"
               && <>{item.word} x{item.count} by {findPlayer(item.by)?.name}</>}
             {item.type === "select_card"
-              && <>{item.key} by {findPlayer(item.by)?.name}</>}
-            {item.type === "lose_team"
-              && <>lose {item.team}</>}
+              && <>{findPlayer(item.by)?.name} selects {findCard(item.key)?.word}</>}
             {item.type === "end_turn"
               && <>TURN END {item.team}</>}
             {item.type === "start_turn"
               && <>TURN START {item.team}</>}
+            {item.type === "lose_team"
+              && <>Team {item.team} Lost</>}
             {item.type === "end_game"
               && <>game set</>}
           </span>

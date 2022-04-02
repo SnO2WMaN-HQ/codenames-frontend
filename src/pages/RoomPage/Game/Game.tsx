@@ -24,37 +24,26 @@ export const Game: React.VFC<{
     )[];
   };
   myPlayerId: string;
-  findPlayer: (id: string) => undefined | { name: string; };
-  handleSendHint(hint: string, num: number): void;
-  handleAddSuggest(key: number): void;
-  handleRemoveSuggest(key: number): void;
-  handleSelect(key: number): void;
-  handleJoinOperative(team: number): void;
-  handleJoinSpymaster(team: number): void;
+  playersList: { id: string; name: string; }[];
+  handleJoinOperative(by: string, team: number): void;
+  handleJoinSpymaster(by: string, team: number): void;
+  handleAddSuggest(by: string, key: number): void;
+  handleRemoveSuggest(by: string, key: number): void;
+  handleSendHint(by: string, word: string, count: number): void;
+  handleSelectCard(by: string, key: number): void;
 }> = (
   {
     game,
+    playersList,
     myPlayerId,
-    handleAddSuggest: handleSuggest,
+    handleAddSuggest,
     handleRemoveSuggest,
-    findPlayer,
-    handleSelect,
+    handleSelectCard,
     handleJoinOperative,
     handleJoinSpymaster,
     handleSendHint,
   },
 ) => {
-  const myTeam = useMemo<null | number>(
-    () => {
-      const i = game.teams.findIndex(({ operatives, spymasters }) =>
-        operatives.find(({ playerId }) => playerId === myPlayerId) !== undefined
-        || spymasters.find(({ playerId }) => playerId === myPlayerId) !== undefined
-      );
-      if (i === -1) return null;
-      return i + 1;
-    },
-    [game, myPlayerId],
-  );
   const me = useMemo<null | { playerId: string; team: number; role: "spymaster" | "operative"; }>(() => {
     const opi = game.teams.findIndex(({ operatives }) =>
       operatives.find(({ playerId }) => playerId === myPlayerId) !== undefined
@@ -67,11 +56,36 @@ export const Game: React.VFC<{
     if (smi !== -1) return { playerId: myPlayerId, team: smi + 1, role: "spymaster" };
     return null;
   }, [game, myPlayerId]);
-  const isMyTurnNow = useMemo(() => game.currentTurn === me?.team, [game, me]);
-  const canTurnCardNow = useMemo(() => isMyTurnNow && me?.role === "operative", [me, isMyTurnNow]);
-  const requireHint = useMemo<boolean>(
-    () => game.currentHint === null && me?.team === game.currentTurn && me?.role === "spymaster",
+
+  const findPlayer = useMemo<
+    (i: string) =>
+      | null
+      | { id: string; name: string; }
+      | { id: string; name: string; team: number; role: "operative"; }
+      | { id: string; name: string; team: number; role: "spymaster"; }
+  >(() => ((i) => {
+    const p = playersList.find(({ id }) => id === i);
+    if (!p) return null;
+
+    const opi = game.teams.findIndex((tm) => tm.spymasters.find(({ playerId }) => playerId === i));
+    if (opi !== -1) return { id: i, name: p.name, team: opi + 1, role: "operative" };
+
+    const smi = game.teams.findIndex((tm) => tm.spymasters.find(({ playerId }) => playerId === i));
+    if (smi !== -1) return { id: i, name: p.name, team: opi + 1, role: "spymaster" };
+
+    return { id: i, name: p.name };
+  }), [game, playersList]);
+  const isMyTurnNow = useMemo(
+    () => game.currentTurn === me?.team,
     [game, me],
+  );
+  const isRequiringHint = useMemo<boolean>(
+    () => isMyTurnNow && me?.role === "spymaster" && game.currentHint === null,
+    [game, isMyTurnNow, me?.role],
+  );
+  const canTurnCardNow = useMemo(
+    () => isMyTurnNow && me?.role === "operative" && game.currentHint !== null,
+    [game, isMyTurnNow, me],
   );
 
   return (
@@ -81,14 +95,6 @@ export const Game: React.VFC<{
         ["py-4"],
         ["flex"],
         ["justify-center"],
-        /*
-        [
-          [
-            { "bg-sky-100": game.turn === 1 },
-            { "bg-orange-100": game.turn === 2 },
-          ],
-        ],
-        */
       )}
     >
       <div
@@ -108,19 +114,20 @@ export const Game: React.VFC<{
               key={key}
               word={word}
               role={role}
-              me={me}
-              myTeam={myTeam}
               canTurnNow={canTurnCardNow}
-              suggesting={suggestedBy.includes(myPlayerId)}
               suggestors={suggestedBy.map((id) => ({ id, ...findPlayer(id) }))}
-              handleAddSuggest={() => {
-                handleSuggest(key);
-              }}
-              handleRemoveSuggest={() => {
-                handleRemoveSuggest(key);
+              handleTap={() => {
+                if (!me || me.role !== "operative") return;
+
+                if (suggestedBy.includes(me.playerId)) {
+                  handleRemoveSuggest(me.playerId, key);
+                } else {
+                  handleAddSuggest(me.playerId, key);
+                }
               }}
               handleSelect={() => {
-                handleSelect(key);
+                if (!me || me.role !== "operative") return;
+                handleSelectCard(me.playerId, key);
               }}
             />
           ))}
@@ -128,11 +135,12 @@ export const Game: React.VFC<{
         <Hinter
           className={clsx(["mt-1"], ["w-full"])}
           currentHint={game.currentHint}
-          requireHint={requireHint}
+          requireHint={isRequiringHint}
           currentTeam={game.currentTurn}
           max={25}
           handleSendHint={(hint, num) => {
-            handleSendHint(hint, num);
+            if (!me || me.role !== "spymaster") return;
+            handleSendHint(me.playerId, hint, num);
           }}
         />
       </div>
@@ -153,10 +161,10 @@ export const Game: React.VFC<{
               spymasters={spymasters}
               findPlayer={findPlayer}
               handleJoinOperative={(t) => {
-                handleJoinOperative(t);
+                handleJoinOperative(myPlayerId, t);
               }}
               handleJoinSpymaster={(t) => {
-                handleJoinSpymaster(t);
+                handleJoinSpymaster(myPlayerId, t);
               }}
             />
           ))}
@@ -167,7 +175,13 @@ export const Game: React.VFC<{
             ["h-64"],
           )}
           history={game.history}
-          findPlayer={findPlayer}
+          findPlayer={(id) => {
+            const p = findPlayer(id);
+            if (p && "team" in p) return { name: p.name, team: p.team };
+            else if (p) return { name: p.name, team: null };
+            else return null;
+          }}
+          findCard={(key) => game.deck.find((card) => card.key === key)}
         />
       </div>
     </div>
