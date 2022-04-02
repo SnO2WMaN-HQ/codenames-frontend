@@ -31,6 +31,7 @@ export const Game: React.VFC<{
   handleRemoveSuggest(by: string, key: number): void;
   handleSendHint(by: string, word: string, count: number): void;
   handleSelectCard(by: string, key: number): void;
+  handleQuitGame(): void;
 }> = (
   {
     game,

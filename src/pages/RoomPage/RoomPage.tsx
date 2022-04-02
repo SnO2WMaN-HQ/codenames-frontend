@@ -7,35 +7,23 @@ import { GameStarter } from "./GameStarter";
 import { PlayersList } from "./PlayersList";
 
 export const RoomPage: React.VFC = () => {
-  const { id } = useParams<"id">();
-  const wsEndpoint = useMemo<string | undefined>(
-    () => id && new URL(`/rooms/${id}/join`, import.meta.env.VITE_WS_ENDPOINT).toString(),
-    [id],
-  );
-  const wsRef = useRef<WebSocket | undefined>(undefined);
+  const { id: roomId } = useParams<"id">();
 
   const [connError, setConnError] = useState<boolean>(false);
 
   const [playerId, setPlayerId] = useState<string>();
 
-  const [rawPlayersList, setRawPlayersList] = useState<
-    { id: string; name: string; isHost: boolean; }[]
-  >();
-  const playersList = useMemo<
-    { id: string; name: string; isHost: boolean; isSelf: boolean; }[] | undefined
-  >(
-    () => rawPlayersList?.map(({ id, ...rest }) => ({ ...rest, id, isSelf: id === playerId })),
-    [playerId, rawPlayersList],
-  );
-  const isHostIsMe = useMemo<boolean>(
-    () => playersList?.find(({ isSelf }) => isSelf)?.isHost === true,
-    [playersList],
+  const [rawPlayersList, setRawPlayersList] = useState<{ id: string; name: string; isHost: boolean; }[]>();
+
+  const playersList = useMemo<{ id: string; name: string; isHost: boolean; }[] | undefined>(
+    () => rawPlayersList?.map(({ id, ...rest }) => ({ ...rest, id })),
+    [rawPlayersList],
   );
   const isStartable = useMemo<boolean>(
     () =>
-      isHostIsMe
+      playersList?.find(({ id }) => id === playerId)?.isHost === true
       && (playersList && 4 <= playersList.length) === true,
-    [isHostIsMe, playersList],
+    [playerId, playersList],
   );
   const [isPlaying, setIsPlaying] = useState<boolean | undefined>();
 
@@ -49,13 +37,7 @@ export const RoomPage: React.VFC = () => {
       payload: { player_id: playerId, new_name: newName },
     }));
   };
-  const sendStartGame = (
-    rules: {
-      wordsCount: number;
-      wordsAssign: number[];
-      deadWords: number;
-    },
-  ) => {
+  const sendStartGame = (rules: { wordsCount: number; wordsAssign: number[]; deadWords: number; }) => {
     if (!wsRef.current || !playerId) return;
 
     wsRef.current.send(JSON.stringify({
@@ -69,6 +51,12 @@ export const RoomPage: React.VFC = () => {
     }));
   };
 
+  /* WebSocket */
+  const wsEndpoint = useMemo<string | undefined>(
+    () => roomId && new URL(`/rooms/${roomId}/join`, import.meta.env.VITE_WS_ENDPOINT).toString(),
+    [roomId],
+  );
+  const wsRef = useRef<WebSocket | undefined>(undefined);
   useEffect(() => {
     if (!wsEndpoint) return;
 
@@ -225,13 +213,10 @@ export const RoomPage: React.VFC = () => {
         </div>
       )}
       <p>Room</p>
-      <p>{id}</p>
-      <PlayersList
-        players={playersList}
-        onRename={sendRename}
-      />
+      <p>{roomId}</p>
+      <PlayersList myPlayerId={playerId} players={playersList} onRename={sendRename} />
       {!isPlaying && <GameStarter startGame={sendStartGame} startable={isStartable} />}
-      {playerId && isPlaying && playersList && game && (
+      {isPlaying && playerId && playersList && game && (
         <Game
           game={game}
           myPlayerId={playerId}
@@ -284,6 +269,7 @@ export const RoomPage: React.VFC = () => {
               payload: { type: "submit_hint", player_id: by, word: hint, count: num },
             }));
           }}
+          handleQuitGame={() => {}}
         />
       )}
     </div>

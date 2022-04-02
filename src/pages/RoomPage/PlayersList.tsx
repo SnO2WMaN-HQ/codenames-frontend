@@ -3,10 +3,11 @@ import React, { useState } from "react";
 
 export const PlayersList: React.VFC<{
   className?: string;
-  players: { id: string; name: string; isSelf: boolean; isHost: boolean; }[] | undefined;
+  myPlayerId: string | undefined;
+  players: { id: string; name: string; isHost: boolean; }[] | undefined;
   onRename(name: string): void;
 }> = (
-  { className, players, onRename },
+  { className, players, onRename, myPlayerId },
 ) => {
   const [value, setValue] = useState<string | undefined>();
 
@@ -22,10 +23,10 @@ export const PlayersList: React.VFC<{
       {!players && <span>Loading</span>}
       {players && (
         <div>
-          {players.map(({ id, name, isSelf, isHost }) => (
+          {players.map(({ id, name, isHost }) => (
             <div key={id}>
-              {!isSelf && <span>{name}</span>}
-              {isSelf && (
+              {id !== myPlayerId && <span>{name}</span>}
+              {id === myPlayerId && (
                 <>
                   <input
                     value={value !== undefined ? value : name}
