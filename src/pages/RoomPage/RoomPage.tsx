@@ -269,7 +269,13 @@ export const RoomPage: React.VFC = () => {
               payload: { type: "submit_hint", player_id: by, word: hint, count: num },
             }));
           }}
-          handleQuitGame={() => {}}
+          handleQuitGame={(by) => {
+            if (!wsRef.current) return;
+            wsRef.current.send(JSON.stringify({
+              method: "CLOSE_GAME",
+              payload: { player_id: by },
+            }));
+          }}
         />
       )}
     </div>

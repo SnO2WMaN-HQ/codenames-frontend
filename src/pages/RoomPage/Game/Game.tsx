@@ -24,14 +24,14 @@ export const Game: React.VFC<{
     )[];
   };
   myPlayerId: string;
-  playersList: { id: string; name: string; }[];
+  playersList: { id: string; name: string; isHost: boolean; }[];
   handleJoinOperative(by: string, team: number): void;
   handleJoinSpymaster(by: string, team: number): void;
   handleAddSuggest(by: string, key: number): void;
   handleRemoveSuggest(by: string, key: number): void;
   handleSendHint(by: string, word: string, count: number): void;
   handleSelectCard(by: string, key: number): void;
-  handleQuitGame(): void;
+  handleQuitGame(by: string): void;
 }> = (
   {
     game,
@@ -43,6 +43,7 @@ export const Game: React.VFC<{
     handleJoinOperative,
     handleJoinSpymaster,
     handleSendHint,
+    handleQuitGame,
   },
 ) => {
   const me = useMemo<null | { playerId: string; team: number; role: "spymaster" | "operative"; }>(() => {
@@ -61,21 +62,24 @@ export const Game: React.VFC<{
   const findPlayer = useMemo<
     (i: string) =>
       | null
-      | { id: string; name: string; }
-      | { id: string; name: string; team: number; role: "operative"; }
-      | { id: string; name: string; team: number; role: "spymaster"; }
+      | { id: string; name: string; isHost: boolean; }
+      | { id: string; name: string; isHost: boolean; team: number; role: "operative"; }
+      | { id: string; name: string; isHost: boolean; team: number; role: "spymaster"; }
   >(() => ((i) => {
     const p = playersList.find(({ id }) => id === i);
     if (!p) return null;
 
     const opi = game.teams.findIndex((tm) => tm.spymasters.find(({ playerId }) => playerId === i));
-    if (opi !== -1) return { id: i, name: p.name, team: opi + 1, role: "operative" };
+    if (opi !== -1) return { id: i, name: p.name, isHost: p.isHost, team: opi + 1, role: "operative" };
 
     const smi = game.teams.findIndex((tm) => tm.spymasters.find(({ playerId }) => playerId === i));
-    if (smi !== -1) return { id: i, name: p.name, team: opi + 1, role: "spymaster" };
+    if (smi !== -1) return { id: i, name: p.name, isHost: p.isHost, team: opi + 1, role: "spymaster" };
 
-    return { id: i, name: p.name };
+    return { id: i, name: p.name, isHost: p.isHost };
   }), [game, playersList]);
+
+  const me2 = useMemo(() => findPlayer(myPlayerId), [findPlayer, myPlayerId]);
+
   const gameWinner = useMemo(() => {
     const i = game.teams.findIndex(({ rank }) => rank === 1);
     if (i !== -1) return i + 1;
@@ -162,7 +166,7 @@ export const Game: React.VFC<{
           <div
             className={clsx(
               ["absolute", ["inset-0"], ["z-1"]],
-              ["bg-opacity-50", "dark:bg-opacity-75"],
+              ["bg-opacity-50", "dark:bg-opacity-50"],
               [
                 gameWinner === 1 && [
                   ["bg-sky-700", "dark:bg-sky-700"],
@@ -171,7 +175,7 @@ export const Game: React.VFC<{
                   ["bg-orange-700", "dark:bg-orange-700"],
                 ],
               ],
-              ["flex", ["justify-center"], ["items-center"]],
+              ["flex", ["flex-col"], ["justify-center"], ["items-center"]],
             )}
           >
             <span
@@ -190,6 +194,49 @@ export const Game: React.VFC<{
             >
               Team {gameWinner} Win!
             </span>
+            {me2?.isHost && (
+              <button
+                className={clsx(
+                  ["mt-2"],
+                  [["px-4"], ["py-2"]],
+                  ["rounded"],
+                  ["border"],
+                  [
+                    ["bg-opacity-50", "hover:bg-opacity-50"],
+                    ["dark:bg-opacity-50", "dark:hover:bg-opacity-50"],
+                  ],
+                  [
+                    gameWinner === 1 && [
+                      [
+                        ["bg-sky-500", "hover:bg-sky-600"],
+                        ["dark:bg-sky-700", "dark:hover:bg-sky-800"],
+                      ],
+                      ["border-sky-100", "dark:border-sky-200"],
+                      [
+                        ["text-sky-100", "hover:text-sky-200"],
+                        ["dark:text-sky-200", "hover:text-sky-300"],
+                      ],
+                    ],
+                    gameWinner === 2 && [
+                      [
+                        ["bg-orange-500", "hover:bg-orange-600"],
+                        ["dark:bg-orange-700", "dark:hover:bg-orange-800"],
+                      ],
+                      ["border-orange-100", "dark:border-orange-200"],
+                      [
+                        ["text-orange-100", "hover:text-orange-200"],
+                        ["dark:text-orange-200", "hover:text-orange-300"],
+                      ],
+                    ],
+                  ],
+                )}
+                onClick={() => {
+                  handleQuitGame(myPlayerId);
+                }}
+              >
+                RESET
+              </button>
+            )}
           </div>
         )}
       </div>
