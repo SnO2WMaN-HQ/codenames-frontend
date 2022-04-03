@@ -9,8 +9,12 @@ export const Hinter: React.VFC<
     requireHint: boolean;
     currentHint: null | { word: string; count: number; };
     handleSendHint(hint: string, num: number): void;
+    canFinishEstimate: boolean;
+    handleFinishEstimate(): void;
   }
-> = ({ className, max, handleSendHint, requireHint, currentTeam, currentHint }) => {
+> = (
+  { className, max, handleSendHint, requireHint, currentTeam, currentHint, canFinishEstimate, handleFinishEstimate },
+) => {
   const [hint, setHint] = useState<string>("");
   const [count, setNum] = useState<number>(0);
 
@@ -136,6 +140,54 @@ export const Hinter: React.VFC<
         }}
       >
         GO!
+      </button>
+      <button
+        disabled={!(canFinishEstimate)}
+        className={clsx(
+          ["ml-1"],
+          [
+            ["px-4"],
+            ["py-1"],
+          ],
+          ["select-none"],
+          ["border"],
+          [
+            currentTeam === 1 && [
+              [
+                ["bg-sky-400", "hover:bg-sky-500", "disabled:bg-sky-200"],
+                ["dark:bg-sky-500", "dark:hover:bg-sky-400", "dark:disabled:bg-sky-700"],
+              ],
+              [
+                ["border-sky-600", "disabled:border-sky-300"],
+                ["dark:border-sky-300", "dark:disabled:border-sky-600"],
+              ],
+              [
+                ["text-sky-700", "hover:text-sky-600", "disabled:text-sky-300"],
+                ["dark:text-sky-200", "dark:hover:text-sky-100", "dark:disabled:text-sky-600"],
+              ],
+            ],
+            currentTeam === 2 && [
+              [
+                ["bg-orange-400", "hover:bg-orange-500", "disabled:bg-orange-200"],
+                ["dark:bg-orange-500", "dark:hover:bg-orange-400", "dark:disabled:bg-orange-700"],
+              ],
+              [
+                ["border-orange-600", "disabled:border-orange-300"],
+                ["dark:border-orange-300", "dark:disabled:border-orange-600"],
+              ],
+              [
+                ["text-orange-700", "hover:text-orange-600", "disabled:text-orange-300"],
+                ["dark:text-orange-200", "dark:hover:text-orange-100", "dark:disabled:text-orange-600"],
+              ],
+            ],
+          ],
+        )}
+        onClick={(e) => {
+          e.preventDefault();
+          if (canFinishEstimate) handleFinishEstimate();
+        }}
+      >
+        FINISH ESTIMATE
       </button>
     </div>
   );

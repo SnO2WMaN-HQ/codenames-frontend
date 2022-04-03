@@ -19,6 +19,7 @@ export const Game: React.VFC<{
       | { type: "select_card"; by: string; key: number; }
       | { type: "lose_team"; team: number; }
       | { type: "end_turn"; team: number; }
+      | { type: "finish_estimate"; by: string; }
       | { type: "start_turn"; team: number; }
       | { type: "end_game"; }
     )[];
@@ -32,6 +33,7 @@ export const Game: React.VFC<{
   handleSendHint(by: string, word: string, count: number): void;
   handleSelectCard(by: string, key: number): void;
   handleQuitGame(by: string): void;
+  handleFinishEstimate(by: string): void;
 }> = (
   {
     game,
@@ -44,6 +46,7 @@ export const Game: React.VFC<{
     handleJoinSpymaster,
     handleSendHint,
     handleQuitGame,
+    handleFinishEstimate,
   },
 ) => {
   const me = useMemo<null | { playerId: string; team: number; role: "spymaster" | "operative"; }>(() => {
@@ -160,6 +163,11 @@ export const Game: React.VFC<{
           handleSendHint={(hint, num) => {
             if (!me || me.role !== "spymaster") return;
             handleSendHint(me.playerId, hint, num);
+          }}
+          canFinishEstimate={true}
+          handleFinishEstimate={() => {
+            if (!me || me.role !== "operative") return;
+            handleFinishEstimate(me.playerId);
           }}
         />
         {gameWinner !== null && (

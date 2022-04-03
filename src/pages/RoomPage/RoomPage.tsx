@@ -167,6 +167,13 @@ export const RoomPage: React.VFC = () => {
                   };
                   return { type, team };
                 }
+                case "finish_estimate": {
+                  const { type, player_id } = item as {
+                    type: "finish_estimate";
+                    player_id: string;
+                  };
+                  return { type, by: player_id };
+                }
                 case "end_turn": {
                   const { type, team } = item as {
                     type: "end_turn";
@@ -267,6 +274,13 @@ export const RoomPage: React.VFC = () => {
             wsRef.current.send(JSON.stringify({
               method: "UPDATE_GAME",
               payload: { type: "submit_hint", player_id: by, word: hint, count: num },
+            }));
+          }}
+          handleFinishEstimate={(by) => {
+            if (!wsRef.current) return;
+            wsRef.current.send(JSON.stringify({
+              method: "UPDATE_GAME",
+              payload: { type: "finish_estimate", player_id: by },
             }));
           }}
           handleQuitGame={(by) => {

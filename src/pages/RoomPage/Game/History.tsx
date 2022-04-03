@@ -12,6 +12,7 @@ export const History: React.VFC<
       | { type: "lose_team"; team: number; }
       | { type: "end_turn"; team: number; }
       | { type: "start_turn"; team: number; }
+      | { type: "finish_estimate"; by: string; }
       | { type: "end_game"; }
     )[];
   }
